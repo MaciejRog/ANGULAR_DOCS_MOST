@@ -1,12 +1,10 @@
 import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Doc1 } from './docs-1-signals/doc-1';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [Doc1],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrl: './app.css',
 })
-export class App {
-  protected readonly title = signal('docs-most');
-}
+export class App {}
