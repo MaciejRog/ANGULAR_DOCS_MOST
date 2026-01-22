@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { CompA } from './comp-a/comp-a';
+import { CompA } from './comp-a-overview/comp-a';
 
 @Component({
   selector: 'app-doc-2',
