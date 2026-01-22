@@ -1,12 +1,21 @@
-import { ChangeDetectionStrategy, Component, effect, signal } from '@angular/core';
+import {
+  afterRenderEffect,
+  ChangeDetectionStrategy,
+  Component,
+  effect,
+  inject,
+  Injector,
+  signal,
+} from '@angular/core';
 
 @Component({
   selector: 'app-signal-d',
   imports: [],
   template: `
     <div class="wrapper">
-      <p>effects</p>
+      <p id="effect-id">effects</p>
       <button (click)="increment()">UPDATE count trigger effect</button>
+      <button (click)="runEffect()">runEffect</button>
     </div>
   `,
   styles: `
@@ -28,10 +37,20 @@ export class SignalD {
 	Efekty pozwalają na wykonywanie tzw. "skutków ubocznych" (side effects), 
 			czyli akcji, które wychodzą poza czyste zarządzanie stanem danych.
 			np synchronizacja z API itp...
-	
+	Cel efketu to -> uruchom kod nie reaktywny na zmianę wartości reaktywnej 
+  
+  effect()              ->  Działa zanim Angular zaktualizuje DOM (stary dom w chwili aktualizacji)
+  afterRenderEffect     ->  Działa już po updatcie DOM  (nowy DOM) [tylko CLIENT-SIDE]
+  UWAGA zamiast 'afterRenderEffect'
+    preferować API:  ResizeObserver, MutationObserver, IntersectionObserver
+
 	Efekt zawsze uruchamia się przynajmniej 1 raz (zaraz po utworzeniu)
 	efekty powinny być używane rzadko. 
 	Nie należy ich używać do ustawiania innych sygnałów, może to prowadzić do błędów 
+  są powiązane z change detection process.
+  Angular sam wywołuje cleanup (sprząta po efekcie), chwila zależy od kontekstu utworzenia efektu:
+    - view effect | gdy niszczymy komponent
+    - root effect | gdy niszczymy CAŁA APLIKACJĘ
 
 	Dobre zastosowania dla efektów:
 			Effects are best for syncing signal state to imperative, non-signal APIs.
@@ -39,33 +58,109 @@ export class SignalD {
 			Synchronizacja z DOM: np. rysowanie na elemencie <canvas>, inicjalizacja bibliotek zewnętrznych (jak wykresy Chart.js), które nie są reaktywne.
 			Zapisywanie w pamięci przeglądarki: np. automatyczne zapisywanie stanu do localStorage.
 			Niestandardowe zachowania: np. wyzwalanie animacji w odpowiedzi na stan.
+  
+  Efekt można wykorzystać gdy mmay dostęp do funkcji 'inject'
+    - konstrukotry w klasach, dyrektywach, servisach
+    - poza konstrukotrem trzeba przekazać incjector
+          private injector = inject(Injector);
+          initializeLogging(): void {
+            effect(
+              () => {},
+              {injector: this.injector},
+            );
+          }
 	*/
 
   count = signal(0);
-
   constructor() {
-    // Rejestracja efektu:
-    // 			- konstruktor
-    //			- pole klasy
-    //			- ręczne przekazanie Incjetora
     effect(() => {
       // wywołanie asynchroniczne podczas 'change detection'
       console.warn(`Aktualna wartość licznika to: ${this.count()}`);
     });
 
-    effect((cleanup) => {
+    const effectRefVal = effect((cleanup) => {
       const timer = setTimeout(() => {
         console.warn(`cleanup effect start`);
       });
 
       cleanup(() => {
+        // wywołana na:
+        // - wywołanie ponowne efektu
+        // - niszczenie efektu
         clearTimeout(timer);
         console.warn(`cleanup effect end`);
       });
     });
-  }
+    setTimeout(() => {
+      // mozna ręcznie wywołać destory
+      effectRefVal.destroy();
+    }, 2000);
 
+    let domElement: HTMLParagraphElement | null = null;
+    afterRenderEffect({
+      // modyfikację DOM wpływają na performance dlatego Anuglar
+      // wydzielił 4 fazy by go poprawić (poniżej w kolejności ich wykonania)
+      earlyRead: (clean) => {
+        // 1) by czytać z DOM, przed 'write'
+        domElement = document.querySelector('#effect-id');
+        console.warn(`afterRenderEffect earlyRead`);
+        return clean(() => {
+          console.warn(`afterRenderEffect earlyRead clean`);
+          return domElement;
+        });
+      },
+      write: (prevValue, clean) => {
+        // 2) możem zmienić DOM, ale NIE CZYTAĆ z niego
+        if (domElement) {
+          domElement.textContent += '1';
+        }
+        // prevValue -> earlyRead !
+        console.warn(`afterRenderEffect write | prevValue = `, prevValue());
+        return clean(() => {
+          console.warn(`afterRenderEffect write clean`);
+        });
+      },
+      mixedReadWrite: (prevValue, clean) => {
+        // 3) najlepiej unikać jak ognia !!!
+        //  domyślan jak nie ma faz
+        // prevValue -> write !
+        console.warn(`afterRenderEffect mixedReadWrite | prevValue = `, prevValue());
+        return clean(() => {
+          console.warn(`afterRenderEffect mixedReadWrite clean`);
+        });
+      },
+      read: (prevValue, clean) => {
+        // 4) czytanie z dom, NIGDY ZAPIS
+        domElement = document.querySelector('#effect-id');
+        // prevValue -> mixedReadWrite !
+        console.warn(`afterRenderEffect read | prevValue = `, prevValue());
+        return clean(() => {
+          console.warn(`afterRenderEffect read clean`);
+        });
+      },
+    });
+
+    afterRenderEffect(() => {
+      // bez określenia faz, domyślnie kod uruchomi się w 'mixedReadWrite'
+      const element = document.querySelector('#effect-id');
+      if (element) {
+        element.textContent += '1';
+      }
+    });
+  }
   increment() {
     this.count.update((c) => c + 1);
   }
+
+  private injector = inject(Injector);
+  runEffect = () => {
+    effect(
+      () => {
+        console.warn(`Injector effect`);
+      },
+      {
+        injector: this.injector,
+      },
+    );
+  };
 }
