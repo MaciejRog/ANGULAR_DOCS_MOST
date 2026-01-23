@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { SignalA } from './signal-a/signal-a';
-import { SignalAA } from './signal-a/signal-aa';
-import { SignalB } from './signal-b/signal-b';
-import { SignalC } from './signal-c/signal-c';
-import { SignalD } from './signal-d/signal-d';
+import { SignalA } from './signal-a-overview/signal-a';
+import { SignalAA } from './signal-a-overview/signal-aa';
+import { SignalB } from './signal-b-linkedSignal/signal-b';
+import { SignalC } from './signal-c-resource/signal-c';
+import { SignalD } from './signal-d-effects/signal-d';
 
 @Component({
   selector: 'app-doc-1',
