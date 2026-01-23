@@ -136,16 +136,16 @@ export class CompC {
 	WAŻNE
 	:host: 				
 			Służy do stylowania całego elementu, który reprezentuje nasz komponent
-	:host-context(): 
+	:host-context():  [przestarzałe]
 			Pozwala stylować komponent w zależności od jego rodzica np: jego klasy
 
-	<div>									// :host-context()
+	<div>									// :host-context() [przestarzałe]
 		<app-comp>					// :host
 			<div>							// reszta ze styli w 'styles' lub 'styleUrl
 				Wartość div			// reszta ze styli w 'styles' lub 'styleUrl
 			</div>						// reszta ze styli w 'styles' lub 'styleUrl
 		</app-comp>					// :host
-	</div>								// :host-context()
+	</div>								// :host-context() [przestarzałe]
 
 	*/
 }
