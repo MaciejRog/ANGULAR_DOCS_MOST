@@ -1,14 +1,16 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { CompA } from './comp-a-overview/comp-a';
 import { CompB } from './comp-b-selectors/comp-b';
+import { CompC } from './comp-c-styles/comp-c';
 
 @Component({
   selector: 'app-doc-2',
-  imports: [CompA, CompB],
+  imports: [CompA, CompB, CompC],
   template: `
     <div class="list">
-      <app-comp-a></app-comp-a>
-      <app-comp-b></app-comp-b>
+      <!-- <app-comp-a></app-comp-a> -->
+      <!-- <app-comp-b></app-comp-b> -->
+      <app-comp-c></app-comp-c>
     </div>
   `,
   styles: `
