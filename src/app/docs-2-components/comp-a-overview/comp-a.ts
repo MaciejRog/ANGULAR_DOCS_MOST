@@ -8,7 +8,7 @@ wymagane są 2:
 reszta jest opcjonalna 
 */
 @Component({
-  // selector -> za jego pomocą można osadzić komponent w innym
+  // selector -> za jego pomocą można osadzić komponent w innym	 <app-comp-a></app-comp-a>
   selector: 'app-comp-a',
   // import to lista komponentow, dyrektyw i pipeow użytych w komponencie
   // w import moga byc tylko 'standalone' komponentu inne musza byc w modulach ngModule
