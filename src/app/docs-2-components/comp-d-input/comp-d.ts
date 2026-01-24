@@ -4,4 +4,8 @@ import { Component } from '@angular/core';
   selector: 'app-comp-d',
   template: ``,
 })
-export class CompD {}
+export class CompD {
+  /*
+
+	*/
+}

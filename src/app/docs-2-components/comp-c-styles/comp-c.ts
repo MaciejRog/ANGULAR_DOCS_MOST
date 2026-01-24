@@ -87,10 +87,11 @@ export class CompCCCScope {
 						- najbardziej rygorystyczna izolacja. na 100% tylko do komponentu
 							Wykorzystuje natywną funkcję przeglądarki (Shadow DOM)
 							Style z zewnątrz (nawet globalne) nie wejdą do środka komponentu 
+            - style globalne zdefiniowane poza komponentem NIE DZIAŁAJĄ
 							style ze środka nigdy nie wyjdą na zewnątrz.
 							UWAGA wpływa na propagację zdarzeń
 			- ExperimentalIsolatedShadowDom
-						- Style globalne nie mogą wpływać na elementy w drzewie cieni, 
+						- Style globalne zdefiniowane poza komponentem NIE DZIAŁAJĄ
 							style wewnątrz drzewa cieni nie mogą wpływać na elementy poza tym drzewem cieni.
 			- None
 						- Całkowity brak izolacji style globalne. 
@@ -125,6 +126,7 @@ export class CompCCCScopeChild {}
   // (zalecane) można style podać też w osobnym stylu
   // pozwalan na SCSS, Sass
   styleUrl: './comp-c.css',
+  encapsulation: ViewEncapsulation.None,
 })
 export class CompC {
   /*
