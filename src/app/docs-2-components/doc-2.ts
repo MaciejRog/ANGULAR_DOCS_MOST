@@ -7,10 +7,11 @@ import { CompDOld } from './comp-d-input/comp-d-old-decorator';
 import { CompE } from './comp-e-output/comp-e';
 import { CompEOld } from './comp-e-output/comp-e-old-decorator';
 import { CompF } from './comp-f-content/comp-f';
+import { CompG } from './comp-g-host/comp-g';
 
 @Component({
   selector: 'app-doc-2',
-  imports: [CompA, CompB, CompC, CompD, CompDOld, CompE, CompEOld, CompF],
+  imports: [CompA, CompB, CompC, CompD, CompDOld, CompE, CompEOld, CompF, CompG],
   template: `
     <div class="list">
       <!-- <app-comp-a></app-comp-a> -->
@@ -20,7 +21,8 @@ import { CompF } from './comp-f-content/comp-f';
       <!-- <app-comp-d-old></app-comp-d-old> -->
       <!-- <app-comp-e /> -->
       <!-- <app-comp-e-old /> -->
-      <app-comp-f />
+      <!-- <app-comp-f /> -->
+      <app-comp-g />
     </div>
   `,
   styles: `
