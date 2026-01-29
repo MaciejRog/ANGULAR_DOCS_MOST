@@ -9,10 +9,25 @@ import { CompEOld } from './comp-e-output/comp-e-old-decorator';
 import { CompF } from './comp-f-content/comp-f';
 import { CompG } from './comp-g-host/comp-g';
 import { CompH } from './comp-h-lifecycle/comp-h';
+import { CompI } from './comp-i-query-view-content/comp-i';
+import { CompJ } from './comp-j-dom-api/comp-j';
 
 @Component({
   selector: 'app-doc-2',
-  imports: [CompA, CompB, CompC, CompD, CompDOld, CompE, CompEOld, CompF, CompG, CompH],
+  imports: [
+    CompA,
+    CompB,
+    CompC,
+    CompD,
+    CompDOld,
+    CompE,
+    CompEOld,
+    CompF,
+    CompG,
+    CompH,
+    CompI,
+    CompJ,
+  ],
   template: `
     <div class="list">
       <!-- <app-comp-a></app-comp-a> -->
@@ -24,7 +39,9 @@ import { CompH } from './comp-h-lifecycle/comp-h';
       <!-- <app-comp-e-old /> -->
       <!-- <app-comp-f /> -->
       <!-- <app-comp-g /> -->
-      <app-comp-h />
+      <!-- <app-comp-h /> -->
+      <!-- <app-comp-i /> -->
+      <app-comp-j />
     </div>
   `,
   styles: `
