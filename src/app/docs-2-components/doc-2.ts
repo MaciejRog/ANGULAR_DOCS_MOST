@@ -11,6 +11,7 @@ import { CompG } from './comp-g-host/comp-g';
 import { CompH } from './comp-h-lifecycle/comp-h';
 import { CompI } from './comp-i-query-view-content/comp-i';
 import { CompJ } from './comp-j-dom-api/comp-j';
+import { CompK } from './comp-k-inheritance/comp-k';
 
 @Component({
   selector: 'app-doc-2',
@@ -27,6 +28,7 @@ import { CompJ } from './comp-j-dom-api/comp-j';
     CompH,
     CompI,
     CompJ,
+    CompK,
   ],
   template: `
     <div class="list">
@@ -41,7 +43,8 @@ import { CompJ } from './comp-j-dom-api/comp-j';
       <!-- <app-comp-g /> -->
       <!-- <app-comp-h /> -->
       <!-- <app-comp-i /> -->
-      <app-comp-j />
+      <!-- <app-comp-j /> -->
+      <app-comp-k />
     </div>
   `,
   styles: `
