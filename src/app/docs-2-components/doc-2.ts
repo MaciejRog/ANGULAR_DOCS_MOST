@@ -14,6 +14,7 @@ import { CompJ } from './comp-j-dom-api/comp-j';
 import { CompK } from './comp-k-inheritance/comp-k';
 import { CompL } from './comp-l-programing-render-comp/comp-l';
 import { CompM } from './comp-m-configuration/comp-m';
+import { CompN } from './comp-n-custom-element/comp-n';
 
 @Component({
   selector: 'app-doc-2',
@@ -33,6 +34,7 @@ import { CompM } from './comp-m-configuration/comp-m';
     CompK,
     CompL,
     CompM,
+    CompN,
   ],
   template: `
     <div class="list">
@@ -50,7 +52,8 @@ import { CompM } from './comp-m-configuration/comp-m';
       <!-- <app-comp-j /> -->
       <!-- <app-comp-k /> -->
       <!-- <app-comp-l /> -->
-      <app-comp-m />
+      <!-- <app-comp-m /> -->
+      <app-comp-n />
     </div>
   `,
   styles: `
