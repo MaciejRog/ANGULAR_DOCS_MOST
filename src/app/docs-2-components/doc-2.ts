@@ -12,6 +12,8 @@ import { CompH } from './comp-h-lifecycle/comp-h';
 import { CompI } from './comp-i-query-view-content/comp-i';
 import { CompJ } from './comp-j-dom-api/comp-j';
 import { CompK } from './comp-k-inheritance/comp-k';
+import { CompL } from './comp-l-programing-render-comp/comp-l';
+import { CompM } from './comp-m-configuration/comp-m';
 
 @Component({
   selector: 'app-doc-2',
@@ -29,6 +31,8 @@ import { CompK } from './comp-k-inheritance/comp-k';
     CompI,
     CompJ,
     CompK,
+    CompL,
+    CompM,
   ],
   template: `
     <div class="list">
@@ -44,7 +48,9 @@ import { CompK } from './comp-k-inheritance/comp-k';
       <!-- <app-comp-h /> -->
       <!-- <app-comp-i /> -->
       <!-- <app-comp-j /> -->
-      <app-comp-k />
+      <!-- <app-comp-k /> -->
+      <!-- <app-comp-l /> -->
+      <app-comp-m />
     </div>
   `,
   styles: `
