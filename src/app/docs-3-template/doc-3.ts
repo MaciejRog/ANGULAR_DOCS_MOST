@@ -1,10 +1,16 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { TempA } from './temp-a-overview/temp-a';
+import { TempB } from './temp-b-binding/temp-b';
 
 @Component({
   selector: 'app-doc-3',
-  imports: [TempA],
-  template: ` <div class="list"><app-temp-a /></div> `,
+  imports: [TempA, TempB],
+  template: `
+    <div class="list">
+      <!-- <app-temp-a /> -->
+      <app-temp-b />
+    </div>
+  `,
   styles: `
     .list {
       display: flex;
