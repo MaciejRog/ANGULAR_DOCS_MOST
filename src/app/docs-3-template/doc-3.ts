@@ -3,16 +3,18 @@ import { TempA } from './temp-a-overview/temp-a';
 import { TempB } from './temp-b-binding/temp-b';
 import { TempC } from './temp-c-events/temp-c';
 import { TempD } from './temp-d-two-way-binding/temp-d';
+import { TempE } from './temp-e-control-flow/temp-e';
 
 @Component({
   selector: 'app-doc-3',
-  imports: [TempA, TempB, TempC, TempD],
+  imports: [TempA, TempB, TempC, TempD, TempE],
   template: `
     <div class="list">
       <!-- <app-temp-a /> -->
       <!-- <app-temp-b /> -->
       <!-- <app-temp-c /> -->
-      <app-temp-d />
+      <!-- <app-temp-d /> -->
+      <app-temp-e />
     </div>
   `,
   styles: `
