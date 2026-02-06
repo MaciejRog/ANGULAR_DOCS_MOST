@@ -210,7 +210,7 @@ export class Tempf {
 }
 
 // ###############################
-// ###############################
+// ############################### Custom PIPE
 // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
 
 @Component({

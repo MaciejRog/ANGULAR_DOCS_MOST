@@ -5,10 +5,11 @@ import { TempC } from './temp-c-events/temp-c';
 import { TempD } from './temp-d-two-way-binding/temp-d';
 import { TempE } from './temp-e-control-flow/temp-e';
 import { Tempf } from './temp-f-pipes/temp-f';
+import { TempG } from './temp-g-ng-content/temp-g';
 
 @Component({
   selector: 'app-doc-3',
-  imports: [TempA, TempB, TempC, TempD, TempE, Tempf],
+  imports: [TempA, TempB, TempC, TempD, TempE, Tempf, TempG],
   template: `
     <div class="list">
       <!-- <app-temp-a /> -->
@@ -16,7 +17,8 @@ import { Tempf } from './temp-f-pipes/temp-f';
       <!-- <app-temp-c /> -->
       <!-- <app-temp-d /> -->
       <!-- <app-temp-e /> -->
-      <app-temp-f />
+      <!-- <app-temp-f /> -->
+      <app-temp-g />
     </div>
   `,
   styles: `
