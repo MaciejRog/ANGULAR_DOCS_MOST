@@ -6,10 +6,11 @@ import { TempD } from './temp-d-two-way-binding/temp-d';
 import { TempE } from './temp-e-control-flow/temp-e';
 import { Tempf } from './temp-f-pipes/temp-f';
 import { TempG } from './temp-g-ng-content/temp-g';
+import { TempH } from './temp-h-ng-template/temp-h';
 
 @Component({
   selector: 'app-doc-3',
-  imports: [TempA, TempB, TempC, TempD, TempE, Tempf, TempG],
+  imports: [TempA, TempB, TempC, TempD, TempE, Tempf, TempG, TempH],
   template: `
     <div class="list">
       <!-- <app-temp-a /> -->
@@ -18,7 +19,8 @@ import { TempG } from './temp-g-ng-content/temp-g';
       <!-- <app-temp-d /> -->
       <!-- <app-temp-e /> -->
       <!-- <app-temp-f /> -->
-      <app-temp-g />
+      <!-- <app-temp-g /> -->
+      <app-temp-h />
     </div>
   `,
   styles: `
