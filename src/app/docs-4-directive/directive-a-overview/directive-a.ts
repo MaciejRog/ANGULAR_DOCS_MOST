@@ -21,6 +21,10 @@ import { Component } from '@angular/core';
 })
 export class DirectiveA {
   /*
+	komenda w CLI do tworzenia dyrektyw:
+			ng generate directive highlight
+
+
 	RODZAJE DYREKTYW:
 			komponenty		-> tak komponenty, to dyrektywy, które mają szablon HTML
 			atrybutowy		-> modyfikują wygląd lub zachowanie komponentu
@@ -50,5 +54,29 @@ export class DirectiveA {
 
 	UWAGA do hostowania wielu strukturalnych dyrektyw zalecane jest stosowanie 
 	<ng-container>
+
+
+	
+	NgNonBindable
+				specjalna dyrektywa w Angualar, która mówi
+				nie wykonuj dla dzieci tego elemntu żadnego:
+				interpolation, directives, binding 
+				sam elemnt na którym jest na dyrektywy może mieć działające dyrektywy
+
+				wszystko co jest dzieckiem tagu <div id="przyklad"
+				będzie traktowane jako zwykły tekst
+				
+
+				<div id="przyklad" ngNonBindable>
+					<div appHighlightC="green" leaveColor="violet">ELEMENT_4a NgNonBindable {{ 1 + 1 }}</div>
+					<!-- 
+						UWAGA
+						poniższe z uwagi na property binding ZWRCI BŁAD 
+					-->
+					<!-- <div [appHighlightC]="enterColor" [leaveColor]="leaveColor">
+						ELEMENT_4b NgNonBindable {{ 1 + 1 }}
+					</div> -->
+				</div>
+
   */
 }
