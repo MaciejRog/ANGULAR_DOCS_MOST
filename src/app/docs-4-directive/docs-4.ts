@@ -1,14 +1,16 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DirectiveA } from './directive-a-overview/directive-a';
 import { DirectiveB } from './directive-b-attribute/directive-b';
+import { DirectiveC } from './directive-c-structural/directive-c';
 
 @Component({
   selector: 'app-doc-4',
-  imports: [DirectiveA, DirectiveB],
+  imports: [DirectiveA, DirectiveB, DirectiveC],
   template: `
     <div class="list">
       <!-- <app-directive-a /> -->
-      <app-directive-b />
+      <!-- <app-directive-b /> -->
+      <app-directive-c />
     </div>
   `,
   styles: `
