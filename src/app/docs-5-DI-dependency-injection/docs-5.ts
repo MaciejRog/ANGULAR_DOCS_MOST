@@ -1,12 +1,14 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DIA } from './DI-a-overview/DI-a';
+import { DIB } from './DI-b-service/DI-b';
 
 @Component({
   selector: 'app-doc-5',
-  imports: [DIA],
+  imports: [DIA, DIB],
   template: `
     <div class="list">
-      <app-DI-a />
+      <!-- <app-DI-a /> -->
+      <app-DI-b />
     </div>
   `,
   styles: `
