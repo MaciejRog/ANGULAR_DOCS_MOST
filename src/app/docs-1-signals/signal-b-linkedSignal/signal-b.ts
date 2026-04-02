@@ -34,16 +34,19 @@ import { ChangeDetectionStrategy, Component, linkedSignal, signal } from '@angul
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SignalB {
+  // ###############################
+  // ############################### linkedSignal
+  // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
   /*
 	linkedSignal
 
 	Tradycyjnie w Angularze mieliśmy dwa główne rodzaje sygnałów:
 		signal: 		Zapisywalny (set / update), ale nie reaguje na zmiany innych danych.
 		computed: 	Reaguje na zmiany, ale jest tylko do odczytu (read-only).
+
 	linkedSignal łączy te dwa światy. 
 		wartość, możesz ręcznie zmieniać (set / update)
 		Automatycznie "resetuje się" do nowej wartości obliczonej na podstawie źródła, gdy ulegnie zmianie.
-
 
 		Cecha								computed												linkedSignal
 	Zapisywalność			Nie (tylko do odczytu)						Tak (.set, .update)
@@ -53,13 +56,18 @@ export class SignalB {
   initVal1 = ['Standard', 'Express'];
   val1 = signal(this.initVal1);
 
-  // Gdy val1 się zmieni, selection zresetuje się do pierwszego elementu
+  /*
+  podejście do 'linkedSignal'  jak do 'computation'
+  przekazujemy funkcję, która zwraca wartość + określa zależności / producentów
+  */
   linkVal1 = linkedSignal(() => {
-    return this.val1()[0];
+    const dependency = this.val1();
+    // Gdy val1 się zmieni, linkVal1 zresetuje się do pierwszego elementu z tablicy
+    return dependency[0];
   });
   updateVal1 = () => {
     this.val1.update((prev) => {
-      return ['New', ...prev];
+      return [`New-${prev.length}`, ...prev];
     });
   };
   setVal1 = () => {
@@ -73,8 +81,14 @@ export class SignalB {
 
   initVal2 = ['Standard', 'Express'];
   val2 = signal(this.initVal2);
+  /*
+  inne nowe podejście do 'linkedSignal'
+  w obiekcie konfiguracyjnym podajemy:
+    - source        (zależności / producentów)
+    - computation   (obliczenie wartości dla linkedSignal może bazować na poprzednich wartościach)
+  */
   linkVal2 = linkedSignal({
-    // source - to signal, lub input
+    // source - to signal, lub input, modal (ogólnie producent)
     source: this.val2,
     computation: (newOptions, previous) => {
       // update gdy source sie zmieni lub jakaś wartośc w 'computation'
@@ -87,7 +101,7 @@ export class SignalB {
   });
   updateVal2 = () => {
     this.val2.update((prev) => {
-      return ['New', ...prev];
+      return [`New-${prev.length}`, ...prev];
     });
   };
   setVal2 = () => {

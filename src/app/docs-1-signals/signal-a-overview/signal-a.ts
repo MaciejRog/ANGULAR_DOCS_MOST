@@ -41,7 +41,19 @@ import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/c
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SignalA {
-  // Writable signal - normalne
+  // ###############################
+  // ############################### zwykły syngał
+  // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+  /* 
+  Writable signal - możliwa jest zmiana ich wartości
+
+  definicja                   writableSignal = signal(1);
+  odczytanie wartości         writableSignal() 
+  ustawienie wartości
+    - nadpisanie starej       this.writableSignal.set(1);
+    - bazując na starej       this.writableSignal.update((prevValue) => { ... } )
+
+  */
   writableSignal = signal(1);
   setWritableSignal() {
     // metoda set - ustawiająca wartość
@@ -55,18 +67,29 @@ export class SignalA {
     });
   };
 
-  // readonly signal - tylko do odczytu
+  // ###############################
+  // ############################### readonly signal
+  // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+  /* 
+  readonly signal - możliwa jest tylko odczyt wartości
+  */
   private readonly _readonlySignel = signal('a');
+  // zamiana sygnału na 'readolny' przez .asReadonly()
   readonly readonlySignal = this._readonlySignel.asReadonly();
   updateWrongReadonlySignal = () => {
-    // this.readonlySignel
+    // this.readonlySignel.set('b')      // Błąd
     console.log(`nie da się updatować `);
   };
   updateGoodReadonlySignel = () => {
     this._readonlySignel.update((prev) => prev + 'a');
   };
 
-  // Computed signals - sygnały łączone
+  // ###############################
+  // ############################### Computed signal
+  // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+  /* 
+  Computed signals - sygnały łączone
+  */
   signalFirst = signal({ age: 1 });
   signalTwo = signal('a');
   signalThird = signal(true);

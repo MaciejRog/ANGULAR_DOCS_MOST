@@ -4,10 +4,11 @@ import { DIB } from './DI-b-service/DI-b';
 import { DIC } from './DI-c-dependency-providers/DI-c';
 import { DID } from './DI-d-incjection-context/DI-d';
 import { DIE } from './DI-e-DI-hierarchy/DI-e';
+import { DIF } from './DI-f-optimizing/DI-f';
 
 @Component({
   selector: 'app-doc-5',
-  imports: [DIA, DIB, DIC, DID, DIE],
+  imports: [DIA, DIB, DIC, DID, DIE, DIF],
   template: `
     <div class="list">
       <!-- <app-DI-a /> -->
@@ -15,6 +16,7 @@ import { DIE } from './DI-e-DI-hierarchy/DI-e';
       <!-- <app-DI-c /> -->
       <!-- <app-DI-d /> -->
       <app-DI-e />
+      <!-- <app-DI-f /> -->
     </div>
   `,
   styles: `

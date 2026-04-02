@@ -8,25 +8,28 @@ import {
 } from '@angular/core';
 
 /*
-kontekst reaktywny (reactive context) to specjalny stan środowiska uruchomieniowego, 
-w którym Angular aktywnie „nasłuchuje”, jakie sygnały są odczytywane
+kontekst reaktywny (reactive context) 
+to stan, w którym Angular aktywnie „nasłuchuje”, jakie sygnały są odczytywane
+jeśli któryś z syngałów się zmieni to kod, który ich nasłuchuje zareaguje
+
+kontekst reaktywny (reactive context) automatycznie na:
+    wykonywanie     effect, afterRenderEffect callback.
+    obliczanie      computed signal.
+    obliczanie      linkedSignal.
+    obliczanie      resource's params or loader function.
+    renderowanie    component template (including bindings in the host property).
+
 
 
 Producent vs Konsument
-    Producent (Producer): Sygnał, który ma wartość (np. writableSignal, computed, input). 
+    Producent (Producer): ma wartość (np. writableSignal, computed, input). 
 													Gdy jego wartość się zmienia, powiadamia on swoich konsumentów.
-    Konsument (Consumer): Kod uruchamiany w kontekście reaktywnym, który odczytuje sygnały. 
-													Zostaje on „oznaczony” jako zależny od konkretnych producentów.
+    Konsument (Consumer): odczytuje sygnały i 'oznacza' od których zależy
+                          (czyli zapisuje producentów, na zmianę których ma się uruchomić)
+                          uruchamiany w kontekście reaktywnym
 
-kontekst reaktywny (reactive context) automatycznie na:
-    wykonywanie effect, afterRenderEffect callback.
-    obliczanie computed signal.
-    obliczanie linkedSignal.
-    obliczanie a resource's params or loader function.
-    Rendering a component template (including bindings in the host property).
-jeśli któryś z powyższych się zmieni to kod, który ich nasłuchuje zareaguje
 
-													*/
+*/
 
 @Component({
   selector: 'app-signal-aa',
@@ -64,13 +67,16 @@ jeśli któryś z powyższych się zmieni to kod, który ich nasłuchuje zareagu
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SignalAA {
+  // ###############################
+  // ############################### assertNotInReactiveContext
+  // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
   /*
-	assertNotInReactiveContext
-			Dosłownie: „Upewnij się, że NIE jesteśmy w kontekście reaktywnym”
-			Jest to wewnętrzne zabezpieczenie Angulara, które:
-			sprawdza, czy dana funkcja nie została wywołana wewnątrz computed, effect itp.
-			jeśli tak się stanie → Angular zgłasza błąd
-			Dlaczego? Bo niektóre operacje nie powinny być reaktywne.
+	assertNotInReactiveContext -> „Upewnij się, że NIE jesteśmy w kontekście reaktywnym”
+
+  wewnętrzne zabezpieczenie Angulara
+  sprawdza, czy dana funkcja nie została wywołana wewnątrz computed, effect itp. (kontekstu reaktywnego)
+  jeśli tak się stanie → Angular zgłasza błąd
+  Dlaczego? Bo niektóre operacje nie powinny być reaktywne.
 	*/
   saveToDatabase(data: any) {
     console.log(`assertNotInReactiveContext 2a`);
@@ -96,10 +102,12 @@ export class SignalAA {
     this.count.update((prev) => prev + 1);
   };
 
+  // ###############################
+  // ############################### untracked
+  // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
   /*
 	untracked „nie śledź tej zależności”
-			„Przeczytaj wartość signala, ale NIE zapamiętuj, że od niego zależę”
-			Czyli:
+			tj: „Przeczytaj wartość signala, ale NIE zapamiętuj, że od niego zależę”
 			wartość zostanie odczytana, ale zmiany tej wartości nie wywołają reakcji
 	*/
   signalValue1 = signal(1);
@@ -121,8 +129,12 @@ export class SignalAA {
     this.signalValue2.update((prev) => prev + 1);
   };
 
+  // ###############################
+  // ############################### Konfiguracja sygnału
+  // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV 2 argument!
   /*
-  jako 2 argument signal może przyjąć obiekt z konfiguracją, w tym funkcję do sprawdzenia czy zaszedł updatewartości
+  jako 2 argument signal przyjmuje obiekt z konfiguracją, 
+  w tym funkcję do sprawdzenia czy zaszedł updatewartości
       signal(initValue, { equal: () => {} )
   */
   signalValue3 = signal(['test'], {
@@ -146,6 +158,9 @@ export class SignalAA {
     this.signalValue3.set(['test1']);
   };
 
+  // ###############################
+  // ############################### isSignal
+  // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV isWritableSignal
   /*
   do sprawdzenia czy jesteśmy w sygnale jest:
     -  isSignal 

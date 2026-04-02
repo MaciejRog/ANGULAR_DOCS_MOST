@@ -453,7 +453,7 @@ export const TOKEN_3 = new InjectionToken<string>('token.3', { factory: () => 'W
   selector: 'app-DI-e-child-d',
   template: `<p>CHILD_D</p>
     <app-DI-e-child-d-parent>
-      <app-DI-e-child-d-content />
+      <app-DI-e-child-d-content></app-DI-e-child-d-content>
     </app-DI-e-child-d-parent> `,
   providers: [{ provide: TOKEN_3, useValue: 'WARTOSC_1' }],
   // viewProviders: [{ provide: TOKEN_3, useValue: 'WARTOSC_1' }],
@@ -502,6 +502,8 @@ export class DIEChildDChild {
       border: 1px solid red;
     }
   `,
+  providers: [{ provide: TOKEN_3, useValue: 'WARTOSC_4' }],
+  // viewProviders: [{ provide: TOKEN_3, useValue: 'WARTOSC_4' }],
 })
 export class DIEChildDContent {
   // PRZY 'viewProviders'		-> WARTOSC_1  z 'app-DI-e-child-d'

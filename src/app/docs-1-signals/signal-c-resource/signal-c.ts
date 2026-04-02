@@ -49,6 +49,9 @@ import { ChangeDetectionStrategy, Component, resource, signal } from '@angular/c
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SignalC {
+  // ###############################
+  // ############################### resource
+  // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
   /*
   resource (odpowiednik RxJS – rxResource) 
       łączy asynchroniczne operacje bezpośrednio z sygnałami.
@@ -58,15 +61,25 @@ export class SignalC {
       automatycznie reaguje na zmiany sygnałów, od których zależy, i 
       samodzielnie zarządza procesem pobierania danych
   */
+
   /*
   status jaki może przyjmować zasób
-  Status 	      value() 	              Description
-  'idle' 	      undefined 	          Zasób nie zaczął jeszcze ładować danych.
-  'error' 	    undefined 	          Wystąpił błąd.
-  'loading' 	  undefined 	          trwa ładowanie, na zmianę wartości 'params'
-  'reloading' 	Previous value 	      trwa ładowanie, na wywołanie 'reload'
-  'resolved' 	  Resolved value 	      ładowanie sie zakończyło
-  'local' 	    Locally set value 	  wartość Zasóbu ustawiona przez 'set' lub 'update'
+  Status 	      value() 	             Description
+    'idle' 	      undefined 	          Zasób nie zaczął jeszcze ładować danych.
+    'error' 	    undefined 	          Wystąpił błąd.
+    'loading' 	  undefined 	          trwa ładowanie, na zmianę wartości 'params'
+    'reloading' 	Previous value 	      trwa ładowanie, na wywołanie 'reload'
+    'resolved' 	  Resolved value 	      ładowanie sie zakończyło
+    'local' 	    Locally set value 	  wartość Zasóbu ustawiona przez 'set' lub 'update'
+  */
+
+  /*
+  Odczyt danych
+    userResource.hasValue()         - [true / false] true gdy 'loader' zwrócił wartość (skończył się przetwarzać)
+    userResource.value()            - wartość zwrócona przez funkcję 'loader'
+    userResource.isLoading()        - [true / false] true na status 'loading'/'reloading'
+    userResource.error()            - wartość błędu gdy wystąpi błąd w 'loader' i nie zakończy obliczeń
+    userResource.status()           - 1 z powyższych statusów 'idle' itp..
   */
 
   userId = signal(1);
@@ -76,14 +89,20 @@ export class SignalC {
 
   // Definicja zasobu
   userResource = resource({
-    // 1. param -> dane, których zmiana ma wykonać loader
-    // wykonuje się na zmienę 'userId'
+    /*
+    1. params
+          zestaw sygnałów, których zmiana ma wywołac 'loader'
+          działa trochę jak 'linkedSignal' 
+          tylko zwracamy to co ma się znaleźć w argumencie 'loader' jako 'params'
+    */
     params: () => {
       const userId = this.userId();
       return { id: userId };
     },
-    // 2. funkcja asynchroniczna -
-    //    wykona się za każdym razem gdy zmieni się params (to z góry)
+    /*
+    2. loader -> funkcja asynchroniczna
+          wykona się za każdym razem gdy zmieni się params (to z góry)
+    */
     loader: ({ params, abortSignal, previous }): Promise<{ name: string }> => {
       console.log(`resource Loader | params = `, params);
       console.log(`resource Loader | abortSignal = `, abortSignal);

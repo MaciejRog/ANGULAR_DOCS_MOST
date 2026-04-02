@@ -37,11 +37,14 @@ export class SignalD {
 	Efekty pozwalają na wykonywanie tzw. "skutków ubocznych" (side effects), 
 			czyli akcji, które wychodzą poza czyste zarządzanie stanem danych.
 			np synchronizacja z API itp...
+
+  UWAGA!!!!
 	Cel efketu to -> uruchom kod nie reaktywny na zmianę wartości reaktywnej 
   
   effect()              ->  Działa zanim Angular zaktualizuje DOM (stary dom w chwili aktualizacji)
   afterRenderEffect     ->  Działa już po updatcie DOM  (nowy DOM) [tylko CLIENT-SIDE]
-  UWAGA zamiast 'afterRenderEffect'
+
+  UWAGA!!! zamiast 'afterRenderEffect'
     preferować API:  ResizeObserver, MutationObserver, IntersectionObserver
 
 	Efekt zawsze uruchamia się przynajmniej 1 raz (zaraz po utworzeniu)
@@ -53,11 +56,12 @@ export class SignalD {
     - root effect | gdy niszczymy CAŁA APLIKACJĘ
 
 	Dobre zastosowania dla efektów:
-			Effects are best for syncing signal state to imperative, non-signal APIs.
-			Logowanie danych do celów analitycznych lub debugowania.
-			Synchronizacja z DOM: np. rysowanie na elemencie <canvas>, inicjalizacja bibliotek zewnętrznych (jak wykresy Chart.js), które nie są reaktywne.
-			Zapisywanie w pamięci przeglądarki: np. automatyczne zapisywanie stanu do localStorage.
-			Niestandardowe zachowania: np. wyzwalanie animacji w odpowiedzi na stan.
+			- synchronizacja z zewnętrzym API / bibliotekami
+			- Logowanie danych do celów analitycznych lub debugowania.
+			- Synchronizacja z DOM: np. rysowanie na elemencie <canvas>, 
+      - inicjalizacja bibliotek zewnętrznych (jak wykresy Chart.js), które nie są reaktywne.
+			- Zapisywanie w pamięci przeglądarki: np. automatyczne zapisywanie stanu do localStorage.
+			- Niestandardowe zachowania: np. wyzwalanie animacji w odpowiedzi na stan.
   
   Efekt można wykorzystać gdy mmay dostęp do funkcji 'inject'
     - konstrukotry w klasach, dyrektywach, servisach
@@ -73,15 +77,23 @@ export class SignalD {
 
   count = signal(0);
   constructor() {
+    // ###############################
+    // ############################### effect
+    // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
     effect(() => {
-      // wywołanie asynchroniczne podczas 'change detection'
-      console.warn(`Aktualna wartość licznika to: ${this.count()}`);
+      const currentCount = this.count();
+      // wywołanie asynchroniczne podczas przebiegu 'change detection'
+      console.warn(`Aktualna wartość licznika to: ${currentCount}`);
     });
 
     const effectRefVal = effect((cleanup) => {
+      console.warn(`cleanup effect start 1`);
       const timer = setTimeout(() => {
-        console.warn(`cleanup effect start`);
-      });
+        console.warn(`cleanup effect start 2`);
+        // z uwagi na to, że po 2 sekundach efekt jest niszczony
+        // a w cleanup czyszczony jest timeout
+        // to ten console.warn się nigdy nie wykona
+      }, 3000);
 
       cleanup(() => {
         // wywołana na:
@@ -93,9 +105,13 @@ export class SignalD {
     });
     setTimeout(() => {
       // mozna ręcznie wywołać destory
+      console.warn(`Effect destroy`);
       effectRefVal.destroy();
     }, 2000);
 
+    // ###############################
+    // ############################### afterRenderEffect
+    // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
     let domElement: HTMLParagraphElement | null = null;
     afterRenderEffect({
       // modyfikację DOM wpływają na performance dlatego Anuglar
@@ -103,11 +119,13 @@ export class SignalD {
       earlyRead: (clean) => {
         // 1) by czytać z DOM, przed 'write'
         domElement = document.querySelector('#effect-id');
-        console.warn(`afterRenderEffect earlyRead`);
-        return clean(() => {
-          console.warn(`afterRenderEffect earlyRead clean`);
-          return domElement;
+        console.log(`afterRenderEffect earlyRead`);
+
+        clean(() => {
+          console.log(`afterRenderEffect earlyRead clean`);
         });
+
+        return domElement;
       },
       write: (prevValue, clean) => {
         // 2) możem zmienić DOM, ale NIE CZYTAĆ z niego
@@ -115,27 +133,31 @@ export class SignalD {
           domElement.textContent += '1';
         }
         // prevValue -> earlyRead !
-        console.warn(`afterRenderEffect write | prevValue = `, prevValue());
-        return clean(() => {
-          console.warn(`afterRenderEffect write clean`);
+        console.log(`afterRenderEffect write | prevValue = `, prevValue());
+        clean(() => {
+          console.log(`afterRenderEffect write clean`);
         });
+
+        return domElement;
       },
       mixedReadWrite: (prevValue, clean) => {
         // 3) najlepiej unikać jak ognia !!!
         //  domyślan jak nie ma faz
         // prevValue -> write !
-        console.warn(`afterRenderEffect mixedReadWrite | prevValue = `, prevValue());
-        return clean(() => {
-          console.warn(`afterRenderEffect mixedReadWrite clean`);
+        console.log(`afterRenderEffect mixedReadWrite | prevValue = `, prevValue());
+        clean(() => {
+          console.log(`afterRenderEffect mixedReadWrite clean`);
         });
+
+        return domElement;
       },
       read: (prevValue, clean) => {
         // 4) czytanie z dom, NIGDY ZAPIS
         domElement = document.querySelector('#effect-id');
         // prevValue -> mixedReadWrite !
-        console.warn(`afterRenderEffect read | prevValue = `, prevValue());
-        return clean(() => {
-          console.warn(`afterRenderEffect read clean`);
+        console.log(`afterRenderEffect read | prevValue = `, prevValue());
+        clean(() => {
+          console.log(`afterRenderEffect read clean`);
         });
       },
     });
