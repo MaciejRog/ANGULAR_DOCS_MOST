@@ -38,7 +38,7 @@ import { CompN } from './comp-n-custom-element/comp-n';
   ],
   template: `
     <div class="list">
-      <!-- <app-comp-a></app-comp-a> -->
+      <app-comp-a></app-comp-a>
       <!-- <app-comp-b></app-comp-b> -->
       <!-- <app-comp-c></app-comp-c> -->
       <!-- <app-comp-d></app-comp-d> -->
@@ -53,7 +53,7 @@ import { CompN } from './comp-n-custom-element/comp-n';
       <!-- <app-comp-k /> -->
       <!-- <app-comp-l /> -->
       <!-- <app-comp-m /> -->
-      <app-comp-n />
+      <!-- <app-comp-n /> -->
     </div>
   `,
   styles: `

@@ -1,70 +1,85 @@
-import { ChangeDetectionStrategy, Component, linkedSignal, signal } from '@angular/core';
+import { Component, linkedSignal, signal, forwardRef } from '@angular/core';
 
 @Component({
   selector: 'app-signal-b',
-  imports: [],
-  // templateUrl: './signal-b.html',
-  // styleUrl: './signal-b.css',
+  imports: [forwardRef(() => SignalB_LinkedSignal)],
   template: `
-    <div class="wrapper">
-      <p>writable signal | val1 = {{ this.val1() }}</p>
-      <p>writable signal | linkVal1 = {{ this.linkVal1() }}</p>
-      <button (click)="updateVal1()">update val1</button>
-      <button (click)="setVal1()">set val1</button>
-      <button (click)="updateLinkVal1()">update linkVal1</button>
-    </div>
-
-    <div class="wrapper">
-      <p>writable signal | val2 = {{ this.val2() }}</p>
-      <p>writable signal | linkVal2 = {{ this.linkVal2() }}</p>
-      <button (click)="updateVal2()">update val2</button>
-      <button (click)="setVal2()">set val2</button>
-      <button (click)="updateLinkVal2()">update linkVal2</button>
-    </div>
+    <SignalB_LinkedSignal />
+    <br />
+    <hr />
   `,
-  styles: `
-    .wrapper {
-      margin: 16px;
-    }
-
-    p {
-      margin: 0;
-    }
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SignalB {
-  // ###############################
-  // ############################### linkedSignal
-  // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-  /*
-	linkedSignal
+export class SignalB {}
 
-	Tradycyjnie w Angularze mieliśmy dwa główne rodzaje sygnałów:
-		signal: 		Zapisywalny (set / update), ale nie reaguje na zmiany innych danych.
-		computed: 	Reaguje na zmiany, ale jest tylko do odczytu (read-only).
+// ###############################
+// ############################### OBLICZANIE NA PODSTAWIE Innych sygnałów + możliwość SET / UPDATE
+// ############################### linkedSignal
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+@Component({
+  selector: 'SignalB_LinkedSignal',
+  template: ` <div>
+      <p>source_1 = {{ this.val1() }}</p>
+      <p>link_signal_1 = {{ this.linkVal1() }}</p>
+      <div>
+        <button (click)="updateVal1()">update source_1</button>
+        <button (click)="setVal1()">set source_1</button>
+      </div>
+      <div>
+        <button (click)="updateLinkVal1()">update link_signal_1</button>
+      </div>
+    </div>
+    <br />
+    <hr />
+
+    <div>
+      <p>source_2 = {{ this.val2() }}</p>
+      <p>link_signal_2 = {{ this.linkVal2() }}</p>
+      <div>
+        <button (click)="updateVal2()">update source_2</button>
+        <button (click)="setVal2()">set source_2</button>
+      </div>
+      <div>
+        <button (click)="updateLinkVal2()">update link_signal_2</button>
+      </div>
+    </div>`,
+})
+export class SignalB_LinkedSignal {
+  /*
+	W Angularze mieliśmy 2 rodzaje sygnałów
+		signal: 		->  nie reaguje na zmianę wartości innych sygnałów
+                    Można zmienić jego wartość (set / update) 
+		computed: 	->  Reaguje na zmianę wartości innych sygnałów
+                    ale jest tylko do odczytu (read-only) (nie można zmienić jego wartości)
+                    ZASTOSOWANIE -> transformacja danych
 
 	linkedSignal łączy te dwa światy. 
-		wartość, możesz ręcznie zmieniać (set / update)
-		Automatycznie "resetuje się" do nowej wartości obliczonej na podstawie źródła, gdy ulegnie zmianie.
-
-		Cecha								computed												linkedSignal
-	Zapisywalność			Nie (tylko do odczytu)						Tak (.set, .update)
-	Reaktywność				Zawsze wyliczany ze źródła				Wyliczany przy zmianie źródła, ale potem niezależny
-	Zastosowanie			Transformacja danych							Stan formularza, wybór z listy, UI "drafts"
+		- wartość można zmieniać (set / update)
+		- Reaguje na zmianę wartości innych sygnałów
+      można ustawić jego wartość, zależnie od wartości sygnałów ze źródła 'source', lub na podstawie poprzedniej jego wartości
+      ZASTOSOWANIE -> stan formularza, wybór z listy, UI "drafts"
 	*/
-  initVal1 = ['Standard', 'Express'];
-  val1 = signal(this.initVal1);
-
   /*
-  podejście do 'linkedSignal'  jak do 'computation'
-  przekazujemy funkcję, która zwraca wartość + określa zależności / producentów
-  */
-  linkVal1 = linkedSignal(() => {
-    const dependency = this.val1();
-    // Gdy val1 się zmieni, linkVal1 zresetuje się do pierwszego elementu z tablicy
-    return dependency[0];
-  });
+	UWAGA
+  - Przed 'linkedSignal' stosowany był 'effect()' aby ręcznie zmieniać wartości sygnałów
+      //
+      //
+      effect(() => {
+        // stare i niezalecane
+        // Potencjalne problemy z cyklami i wydajnością
+        // zmiana sygnału 'emailDraft' na zmianę wartości sygnału 'currentUser'
+        const user = currentUser();
+        emailDraft.set(user.email); 
+      });
+      //
+      //
+      linkedSignal jest bezpieczniejszy:
+        - unika efektów ubocznych: Jest częścią grafu reaktywnego Angulara.
+        - Jest czystszy: Mniej kodu boilerplate.
+        - Lepsza wydajność: Angular dokładnie wie, kiedy dokonać aktualizacji.
+	*/
+
+  initVal1 = ['AAA', 'BBB'];
+  val1 = signal(this.initVal1);
   updateVal1 = () => {
     this.val1.update((prev) => {
       return [`New-${prev.length}`, ...prev];
@@ -73,32 +88,28 @@ export class SignalB {
   setVal1 = () => {
     this.val1.set(this.initVal1);
   };
+  /*
+  'linkedSignal' tak jak 'computed'
+  w przekazanej funkcji odczytujemy sygnały 
+  gdy zmieni się sygnał 'val1' to wartość 'linkVal1' ustawi się na 1 element z tablicy 'val1'
+  ALE możemy sami zmienić wartośc 'linkVal1' jak np: w 'updateLinkVal1'
+  */
+  linkVal1 = linkedSignal(() => {
+    const val1Value = this.val1();
+    return val1Value[0];
+  });
   updateLinkVal1 = () => {
     this.linkVal1.update((prev) => {
       return prev + '1';
     });
   };
 
-  initVal2 = ['Standard', 'Express'];
+  //
+  //
+  //
+  //
+  initVal2 = ['CCC', 'DDD'];
   val2 = signal(this.initVal2);
-  /*
-  inne nowe podejście do 'linkedSignal'
-  w obiekcie konfiguracyjnym podajemy:
-    - source        (zależności / producentów)
-    - computation   (obliczenie wartości dla linkedSignal może bazować na poprzednich wartościach)
-  */
-  linkVal2 = linkedSignal({
-    // source - to signal, lub input, modal (ogólnie producent)
-    source: this.val2,
-    computation: (newOptions, previous) => {
-      // update gdy source sie zmieni lub jakaś wartośc w 'computation'
-      // Możemy użyć poprzedniej wartości, aby zdecydować o nowej
-      console.log(`UPDATE LINKED SIGNAL | newOptions | current val2 value= `, newOptions);
-      console.log(`UPDATE LINKED SIGNAL | previous val2 value = `, previous?.source);
-      console.log(`UPDATE LINKED SIGNAL | current linkVal2 value = `, previous?.value);
-      return newOptions[0];
-    },
-  });
   updateVal2 = () => {
     this.val2.update((prev) => {
       return [`New-${prev.length}`, ...prev];
@@ -107,25 +118,39 @@ export class SignalB {
   setVal2 = () => {
     this.val2.set(this.initVal2);
   };
+  /*
+  'linkedSignal' jako obiekt z konfiguracją
+    - source        (zależności / producentci) sygnały, których zmiana ma wykonać 'computation'
+                    w przekazanej funkcji odczytujemy sygnały tak jak 'computed'
+                    do 'computation' jako 1 argument przekazywany jest 'return' z 'source'
+    - computation   obliczenie nowej wartości dla 'linkedSignal'
+  */
+  linkVal2 = linkedSignal({
+    source: () => {
+      const val2Value = this.val2();
+      // wartość zwrócona w 'source' jest jako 1 argument w 'computation'
+      return {
+        element: val2Value,
+      };
+    },
+    computation: (sourceValues, previous) => {
+      /*
+      sourceValues             -> wartość zwrócona w 'source'
+      previous
+           previous?.source    -> poprzednia wartość zwrócna przez 'source'
+                                  może być 'undefined' gdy to 1 obliczenie 'linkedSignal'
+           previous?.value     -> poprzednia wartość 'linkedSignal'
+                                  może być 'undefined' gdy to 1 obliczenie 'linkedSignal'
+      */
+      console.log(`link_signal_2 | sourceValues = `, sourceValues);
+      console.log(`link_signal_2 | previous.source = `, previous?.source);
+      console.log(`link_signal_2 | previous.value = `, previous?.value);
+      return sourceValues.element[0];
+    },
+  });
   updateLinkVal2 = () => {
     this.linkVal2.update((prev) => {
       return prev + '1';
     });
   };
-
-  /*
-	UWAGA
-	Przed linkedSignal programiści często używali effect(), aby ręcznie resetować sygnały:
-
-	// STARE PODEJŚCIE (niezalecane)
-	effect(() => {
-		const user = currentUser();
-		emailDraft.set(user.email); // Potencjalne problemy z cyklami i wydajnością
-	});
-
-	linkedSignal jest bezpieczniejszy, ponieważ:
-    - Unika efektów ubocznych: Jest częścią grafu reaktywnego Angulara.
-    - Jest czystszy: Mniej kodu boilerplate.
-    - Lepsza wydajność: Angular dokładnie wie, kiedy dokonać aktualizacji.
-	*/
 }

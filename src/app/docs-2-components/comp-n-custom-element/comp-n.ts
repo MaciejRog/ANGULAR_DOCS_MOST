@@ -2,12 +2,20 @@ import { Component, output, signal, forwardRef, input } from '@angular/core';
 
 @Component({
   selector: 'app-comp-n',
-  template: ` <app-comp-n-child-a />`,
-  imports: [forwardRef(() => CompNChildA)],
+  imports: [
+    forwardRef(() => CompNChildA), //
+  ],
+  template: `
+    <!--  -->
+    <app-comp-n-child-a />
+    <br />
+    <hr />
+  `,
 })
 export class CompN {}
 
 // ###############################
+// ############################### odpowiedź na pytanie: jak wyeksportować kod z Angulara do innego frameworku?
 // ############################### ANGULAR ELEMENTS
 // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
 

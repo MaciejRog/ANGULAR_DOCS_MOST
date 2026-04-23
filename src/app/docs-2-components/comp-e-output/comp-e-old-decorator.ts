@@ -2,63 +2,125 @@ import { Component, EventEmitter, forwardRef, Output } from '@angular/core';
 
 @Component({
   selector: 'app-comp-e-old',
+  imports: [forwardRef(() => CompEOld_DecoratorOutput)],
   template: `
-    <p>@output DEKORATOR</p>
-    <app-comp-e-old-child (eventA)="handleEventA()" (alias)="handleEventB($event)" />
-    <app-comp-e-old-decor (outA)="handleOutA($event)" />
+    <!--  -->
+    <CompEOld_DecoratorOutput />
+    <br />
+    <hr />
   `,
-  imports: [forwardRef(() => CompEOldChild), forwardRef(() => CompEOldDecor)],
 })
 export class CompEOld {
   /*
-	@output dekorator 
-	zalecane nowe podejście sygnałowe z 'output()'
-  */
-  handleEventA = () => {
-    console.warn(`hanle event A`);
-  };
-  handleEventB = (event: number) => {
-    console.warn(`hanle event B | event = `, event);
-  };
-
-  handleOutA = (event: number) => {
-    console.warn(`hanle decorator OUT A | event = `, event);
-  };
+   */
 }
 
 // ###############################
-// ############################### @output
+// ############################### stare podejście do 'outputów' jeszcze przed sygnałami
+// ############################### dekorator @Output
 // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-
 @Component({
-  selector: 'app-comp-e-old-child',
-  template: ` <button (click)="emitA()">Emit A</button><button (click)="emitB()">Emit B</button> `,
+  selector: 'CompEOld_DecoratorOutput',
+  imports: [
+    forwardRef(() => CompEOld_DecoratorOutputBase),
+    forwardRef(() => CompEOld_ConstructorOutputs),
+  ],
+  template: `
+    <div>
+      <p>CompEOld_DecoratorOutput</p>
+      <br />
+
+      <!--  -->
+      <CompEOld_DecoratorOutputBase
+        (baseEventA)="handleBaseEventA($event)"
+        (aliasBaseEventB)="handleBaseEventB($event)"
+      />
+      <br />
+      <hr />
+
+      <!--  -->
+      <CompEOld_ConstructorOutputs (constructorEvent)="handleConstructorEvent($event)" />
+      <br />
+      <hr />
+    </div>
+  `,
 })
-export class CompEOldChild {
+export class CompEOld_DecoratorOutput {
   /*
    */
-  @Output() eventA = new EventEmitter<void>();
-  emitA = () => {
-    this.eventA.emit();
+  handleBaseEventA = (event: any) => {
+    console.log('handle base event A | event =', event);
   };
 
-  @Output('alias') eventB = new EventEmitter<number>();
-  emitB = () => {
-    this.eventB.emit(123);
+  handleBaseEventB = (event: number) => {
+    console.log('handle base event B | event =', event);
+  };
+
+  handleConstructorEvent = (event: string) => {
+    console.log('handle constructor event | event =', event);
+  };
+}
+
+@Component({
+  selector: 'CompEOld_DecoratorOutputBase',
+  imports: [],
+  template: `
+    <div>
+      <p>CompEOld_DecoratorOutputBase</p>
+      <br />
+
+      <div>
+        <button (click)="emitBaseEventA()">emit_base_event_A</button>
+        <button (click)="emitBaseEventB()">emit_base_event_B</button>
+      </div>
+    </div>
+  `,
+})
+export class CompEOld_DecoratorOutputBase {
+  /*
+  dekorator '@Output()' analogiczny w działaniu jak sygnał 'output()'
+  */
+  @Output()
+  baseEventA = new EventEmitter();
+  emitBaseEventA = () => {
+    this.baseEventA.emit(); // taka emisja wyśle 'undefined'
+  };
+
+  @Output('aliasBaseEventB')
+  baseEventB = new EventEmitter<number>();
+  emitBaseEventB = () => {
+    this.baseEventB.emit(123);
   };
 }
 
 // ###############################
-// ############################### Decorator output
+// ############################### Outputy możemy też definiować z poziomu dekoratora komponentu
+// ############################### constructor outputs
 // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
 @Component({
-  selector: 'app-comp-e-old-decor',
-  template: `<button (click)="emitA()">Out A emit</button>`,
-  outputs: ['outA'],
+  selector: 'CompEOld_ConstructorOutputs',
+  imports: [],
+  template: `
+    <div>
+      <p>CompEOld_ConstructorOutputs</p>
+      <br />
+
+      <div>
+        <button (click)="emitConstructorEvent()">emit_constructor_event</button>
+      </div>
+    </div>
+  `,
+  outputs: ['constructorEvent'],
 })
-export class CompEOldDecor {
-  outA = new EventEmitter<number>();
-  emitA = () => {
-    this.outA.emit(123);
+export class CompEOld_ConstructorOutputs {
+  /*
+  outputy możemy też zdefiniować wewnątrz dekoratora komponentu:
+  outputs: ['constructorEvent'],       <- definiuje event 'constructorEvent'
+
+  pozwala to na pominięcie dekoratora '@Output()'
+  */
+  constructorEvent = new EventEmitter<string>();
+  emitConstructorEvent = () => {
+    this.constructorEvent.emit('Aga');
   };
 }

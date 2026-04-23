@@ -22,7 +22,7 @@ reszta jest opcjonalna
 })
 export class CompA {
   /*
-	Angular tworzy instancję komponentu dla każdego pasującego elementu HTML
+	Angular tworzy instancję komponentu dla każdego pasującego selektora 
 
 	komponent w strukturze HTML wygląda następująco:
 	<app-comp-a>				// HOST

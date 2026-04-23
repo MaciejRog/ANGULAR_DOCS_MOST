@@ -18,36 +18,110 @@ import {
 
 @Component({
   selector: 'app-comp-h',
+  imports: [forwardRef(() => CompH_LifecycleBase), forwardRef(() => CompH_LifecycleSSR)],
   template: `
-    <p>SHOW {{ show() }} | <button (click)="handleToggle()">ZMIEŃ SHOW</button></p>
-    <p>
-      inputVal {{ parentInputVal() }} | <button (click)="changeInputVal()">ZMIEŃ INPUT VAL</button>
-    </p>
+    <!--  -->
+    <CompH_LifecycleBase />
     <br />
+    <hr />
+
+    <!--  -->
+    <CompH_LifecycleSSR />
     <br />
-    @if (show()) {
-      <app-comp-h-child [inputVal]="parentInputVal()">
-        <p>H PARENT KONTENT - STATIC</p>
-        <p>
-          H PARENT KONTENT - DYNAMIC | {{ value() }}
-          <button (click)="handleClick()">ZMIEŃ KONTENT</button>
-        </p>
-      </app-comp-h-child>
-      <br />
-      <br />
-      <br />
-      <app-comp-h-child-new [inputVal]="parentInputVal()">
-        <p>H PARENT KONTENT - STATIC</p>
-        <p>
-          H PARENT KONTENT - DYNAMIC | {{ value() }}
-          <button (click)="handleClick()">ZMIEŃ KONTENT</button>
-        </p>
-      </app-comp-h-child-new>
-    }
+    <hr />
   `,
-  imports: [forwardRef(() => CompHChild), forwardRef(() => CompHChildNew)],
 })
-export class CompH
+export class CompH {}
+
+// ###############################
+// ############################### podstawowe podejście do cyklu życia komponentów
+// ############################### lifecycle hooki
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+@Component({
+  selector: 'CompH_LifecycleBase',
+  imports: [
+    forwardRef(() => CompH_LifecycleBaseParent), //
+  ],
+  template: `
+    <div>
+      <div>CompH_LifecycleBase</div>
+      <br />
+
+      <div>
+        <div>
+          <button (click)="showHideParentComponent()">
+            {{ isShowParent() ? 'PARENT_HIDE' : 'PARENT_SHOW' }}
+          </button>
+          @if (isShowParent()) {
+            <button (click)="handleRerenderParent()">PARENT_RERENDER</button>
+            <button (click)="handleRerenderParentContent()">PARENT_RERENDER_CONTENT</button>
+          }
+        </div>
+        <div>
+          @if (isShowParent()) {
+            <CompH_LifecycleBaseParent [rerenderParent]="rerenderParent()">
+              <div>parent content = {{ this.rerenderParentContent() }}</div>
+            </CompH_LifecycleBaseParent>
+          }
+        </div>
+      </div>
+    </div>
+  `,
+})
+export class CompH_LifecycleBase {
+  /*
+   */
+  isShowParent = signal(true);
+  showHideParentComponent = () => {
+    this.isShowParent.update((prev) => !prev);
+  };
+
+  rerenderParent = signal(1);
+  handleRerenderParent = () => {
+    this.rerenderParent.update((prev) => prev + 1);
+  };
+
+  rerenderParentContent = signal(1);
+  handleRerenderParentContent = () => {
+    this.rerenderParentContent.update((prev) => prev + 1);
+  };
+}
+
+@Component({
+  selector: 'CompH_LifecycleBaseParent',
+  imports: [
+    forwardRef(() => CompH_LifecycleBaseChild), //
+  ],
+  template: `
+    <div>
+      <div>
+        <div>CompH_LifecycleBaseParent | input = {{ rerenderParent() }}</div>
+        <ng-content />
+      </div>
+      <br />
+
+      <div>
+        <div>
+          <button (click)="showHideChildComponent()">
+            {{ isShowChild() ? 'CHILD_HIDE' : 'CHILD_SHOW' }}
+          </button>
+          @if (isShowChild()) {
+            <button (click)="handleRerenderChild()">CHILD_RERENDER</button>
+            <button (click)="handleRerenderChildContent()">CHILD_RERENDER_CONTENT</button>
+          }
+        </div>
+        <div>
+          @if (isShowChild()) {
+            <CompH_LifecycleBaseChild [rerenderChild]="rerenderChild()">
+              <div>child content = {{ this.rerenderChildContent() }}</div>
+            </CompH_LifecycleBaseChild>
+          }
+        </div>
+      </div>
+    </div>
+  `,
+})
+export class CompH_LifecycleBaseParent
   implements
     OnInit,
     OnChanges,
@@ -58,18 +132,27 @@ export class CompH
     AfterViewInit,
     AfterViewChecked
 {
+  rerenderParent = input.required();
+
+  isShowChild = signal(true);
+  showHideChildComponent = () => {
+    this.isShowChild.update((prev) => !prev);
+  };
+
+  rerenderChild = signal(1);
+  handleRerenderChild = () => {
+    this.rerenderChild.update((prev) => prev + 1);
+  };
+
+  rerenderChildContent = signal(1);
+  handleRerenderChildContent = () => {
+    this.rerenderChildContent.update((prev) => prev + 1);
+  };
+
   /*
-	PRZYPOMNIENIE NAZWY ELEMENTOW KOMPONENTU
-			<app-comp-f-child>														// HOST -> odpowiednik w DOM selectora
-				<div>																				// VIEW -> szablon to co w template
-					<p>CONTENT CHILD</p>											// VIEW
-					<p>Treść ng-content przez rodzica</p>			// CONTENT -> to co między tagami HOSTA w miejscu <ng-content/>
-				</div>																			// VIEW
-			</app-comp-f-child>														// HOST
+	lifecycle
+	to cykl życia komponentu od chwili jego utworzenia, aż do zniszczenia
 
-
-
-	lifecycle -> to cykl życia komponentu od chwili jego utworzenia, aż do zniszczenia
 	każda metoda z cyklu życia to inny proces powiązany z renderowaniem komponentu i sprawdzaniem w nim zmian
 	angular przy sprawdzaniu zmian idzie od ROOT -> LISCI
 	każdy komponent sprawdza tylko 1 raz, więc podczas sprawdzania należy nie wprowadzać zmian
@@ -84,7 +167,7 @@ export class CompH
 				ngAfterContentChecked 
 				ngAfterViewInit
 				ngAfterViewChecked
-	NA UPDATE / RERENDER 
+	NA UPDATE / RERENDER KOMPONENTU
 				ngDoCheck 
 				ngAfterContentChecked 
 				ngAfterViewChecked
@@ -92,25 +175,8 @@ export class CompH
 				ngOnDestroy
 
 	UWAGA
-		jeśli komponent ma np dyrektywy i pokrywają się lifecycle hooki to kolejności 
-		ich wykonania jest przypadkowa
-	*/
-  show = signal(true);
-  handleToggle = () => {
-    console.log('');
-    this.show.update((prev) => !prev);
-  };
-  parentInputVal = signal(10);
-  changeInputVal = () => {
-    console.log('');
-    this.parentInputVal.update((prev) => prev + 1);
-  };
-  value = signal(1);
-  handleClick = () => {
-    console.log('');
-    this.value.update((prev) => prev + 1);
-  };
-
+	jeśli komponent ma np dyrektywy i pokrywają się lifecycle hooki to kolejności ich wykonania jest przypadkowa
+   */
   constructor() {
     console.error('PARENT constructor');
   }
@@ -140,131 +206,26 @@ export class CompH
   }
 }
 
-// ############################### NOWE PODEJŚCIE DO CYKLU ŻYCIA DLA 'SSR"
-// ###############################	SERVER SIDE RENDERINGU - afterEveryRender && afterNextRender
-// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-
 @Component({
-  selector: 'app-comp-h-child-new',
+  selector: 'CompH_LifecycleBaseChild',
+  imports: [],
   template: `
-    <p>NEW | STATYCZNY H CHILD NEW</p>
-    <p>
-      NEW | DYNAMICZNY H CHILD NEW | {{ value() }} <button (click)="handleClick()">ZMIEŃ</button>
-    </p>
-    <ng-content />
+    <div>
+      <div>
+        <div>CompH_LifecycleBaseChild | input = {{ rerenderChild() }}</div>
+        <ng-content />
+      </div>
+      <div>
+        <div>
+          <span>Child signal {{ this.inChildSignal() }}</span>
+          <button (click)="updateInChildSignal()">change_child_signal</button>
+        </div>
+      </div>
+      <br />
+    </div>
   `,
 })
-export class CompHChildNew implements AfterViewInit, AfterViewChecked {
-  inputVal = input.required<number>();
-  value = signal(1);
-  handleClick = () => {
-    console.log('');
-    this.value.update((prev) => prev + 1);
-  };
-
-  constructor() {
-    /*
-		To nie są metody cyklu życia jak ngOnInit. 
-		To funkcje pomocnicze, które pozwalając na bezpieczny dostęp do przeglądarki.
-
-		Przy SSR haki cyklu życia np: 'ngOnInit' próbowały się odpalać i w przeglądarce, ale
-		też na serwerze (a tam nie ma window, document itp)
-		'afterNextRender' i 'afterEveryRender' rozwiązują problem: wykonują się 
-		TYLKO W PRZEGLADARCE.
-
-		Jeśli kod dotyka window, document lub używasz biblioteki, która "rysuje" po DOM 
-		zapomnij o starych hakach. Używaj afterNextRender i afterEveryRender
-		
-		*/
-    afterEveryRender(() => {
-      console.warn(`CompHChildNew | afterEveryRender`);
-      /*
-			- URUCHAMIANY_GDY:	WIELE RAZY
-				po każdym cyklu renderowania całego VIEW w przeglądarce
-			- przyjazny dla SSR.
-			- DZIAŁA JAK 'ngAfterViewChecked' 
-			- wykonuje się na samym końcu po wszystkich lifecycle hooks WSZYSTKICH KOMPONENTOW
-			- wywołanie w kontekcie komponentu (najlepiej konstruktor)
-
-			STOSOWANIE:
-			- biblioteki JS z dostępem do DOM
-			-	zmiana fizycznego wygląd strony, praca na natywnym DOM. itp
-
-					afterEveryRender(() => {
-						// Wykona się po każdej zmianie widoku.
-						// Możesz tu np. mierzyć rozmiary elementów, by przeliczyć pozycję tooltipa. itp
-						const rect = document.querySelector('#target-element')?.getBoundingClientRect();
-						console.log('Aktualna pozycja celu:', rect);
-					});
-			*/
-    });
-
-    afterNextRender(() => {
-      console.warn(`CompHChildNew | afterNextRender`);
-      /*
-			- URUCHAMIANY_GDY:	TYLKO 1 RAZ
-			- przyjazny dla SSR.
-			- DZIAŁA JAK 'ngAfterViewInit' 
-			- wykonuje się na samym końcu po wszystkich lifecycle hooks WSZYSTKICH KOMPONENTOW
-			- wywołanie w kontekcie komponentu (najlepiej konstruktor)
-
-			uruchamiany gdy VIEW komponentu się zainicjuje
-			Angular kończy renderowanie VIEW komponentu (template) oraz wszystkich jego komponentów dzieci.
-
-			stosujmey do:
-			- biblioteki JS z dostępem do DOM
-			-	zmiana fizycznego wygląd strony, praca na natywnym DOM. itp
-			*/
-    });
-
-    afterEveryRender({
-      // modyfikację DOM wpływają na performance dlatego Anuglar
-      // wydzielił 4 fazy by go poprawić (poniżej w kolejności ich wykonania)
-      earlyRead: () => {
-        // UNIKAĆ
-        // 1) by czytać z DOM, przed 'write'
-        console.warn(`afterEveryRender | earlyRead | `);
-        return 1;
-      },
-      write: (arg) => {
-        // 2) możem zmienić DOM, ale NIE CZYTAĆ z niego
-        console.warn(`afterEveryRender | write | arg = `, arg);
-        return arg + 1; // arg = 1 -> przekazane z 'earlyRead'
-      },
-      mixedReadWrite: (arg) => {
-        // DOMYŚLNA - jak nie ma podziały na fazy to jesteśmy w tej
-        // 3) mieszany 2 i 4
-        console.warn(`afterEveryRender | mixedReadWrite | arg = `, arg);
-        return arg + 1; // arg = 2 -> przekazane z 'write'
-      },
-      read: (arg) => {
-        // 4) czytanie z DOM, NIGDY ZAPIS
-        console.warn(`afterEveryRender | read | arg = `, arg);
-        return arg + 1; // arg = 3 -> przekazane z 'mixedReadWrite'
-      },
-    });
-  }
-  ngAfterViewInit(): void {
-    console.warn(`CompHChildNew | ngAfterViewInit`);
-  }
-  ngAfterViewChecked(): void {
-    console.warn(`CompHChildNew | ngAfterViewChecked`);
-  }
-}
-
-// ############################### metody cyklu życia
-// ###############################
-// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-
-@Component({
-  selector: 'app-comp-h-child',
-  template: `
-    <p>STATYCZNY H CHILD</p>
-    <p>DYNAMICZNY H CHILD | {{ value() }} <button (click)="handleClick()">ZMIEŃ</button></p>
-    <ng-content />
-  `,
-})
-export class CompHChild
+export class CompH_LifecycleBaseChild
   implements
     OnInit,
     OnChanges,
@@ -275,15 +236,15 @@ export class CompHChild
     AfterViewInit,
     AfterViewChecked
 {
-  inputVal = input.required<number>();
-  value = signal(1);
-  handleClick = () => {
-    console.log('');
-    this.value.update((prev) => prev + 1);
+  rerenderChild = input.required();
+
+  inChildSignal = signal(1);
+  updateInChildSignal = () => {
+    this.inChildSignal.update((prev) => prev + 1);
   };
 
   constructor() {
-    console.warn('constructor');
+    console.warn('CHILD constructor');
     /*
 		- URUCHAMIANY_GDY:	TYLKO 1 RAZ
 		uruchamiany na stworzenie instancji klasy czyli na utworzenie komponentu
@@ -293,7 +254,7 @@ export class CompHChild
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    console.warn('ngOnChanges | changes = ', changes);
+    console.warn('CHILD ngOnChanges | changes = ', changes);
     /*
 		- URUCHAMIANY_GDY:	WIELE RAZY
 		uruchamiany za każdym razem gdy zmieni/ustawi się wartość 'input' / '@Input' 
@@ -340,7 +301,7 @@ export class CompHChild
   }
 
   ngOnInit(): void {
-    console.warn('ngOnInit | inputVal = ', this.inputVal());
+    console.warn('CHILD ngOnInit | rerenderChild = ', this.rerenderChild());
     /*
 		- URUCHAMIANY_GDY:	TYLKO 1 RAZ
 		uruchamiany jak Angular wczyta wszystkie 'input' / '@Input' z ich wartościami domyślnymi
@@ -357,7 +318,7 @@ export class CompHChild
   }
 
   ngDoCheck(): void {
-    console.warn('ngDoCheck');
+    console.warn('CHILD ngDoCheck');
     /*
 		- URUCHAMIANY_GDY:	WIELE RAZY
 		uruchamiany gdy komponent jest wywołany przez Angular do sprawdzenia pod względem zmian
@@ -383,7 +344,7 @@ export class CompHChild
   }
 
   ngAfterContentInit(): void {
-    console.warn('ngAfterContentInit');
+    console.warn('CHILD ngAfterContentInit');
     /*
 		- URUCHAMIANY_GDY:	TYLKO 1 RAZ
 		uruchamiany gdy kontent komponentu się zainicjuje
@@ -413,7 +374,7 @@ export class CompHChild
   }
 
   ngAfterContentChecked(): void {
-    console.warn('ngAfterContentChecked');
+    console.warn('CHILD ngAfterContentChecked');
     /*
 		- URUCHAMIANY_GDY:	WIELE RAZY
 		uruchamiany gdy KONTENT komponent jest wywołany przez Angular do sprawdzenia pod względem zmian
@@ -433,7 +394,7 @@ export class CompHChild
   }
 
   ngAfterViewInit(): void {
-    console.warn('ngAfterViewInit');
+    console.warn('CHILD ngAfterViewInit');
     /*
 		- URUCHAMIANY_GDY:	TYLKO 1 RAZ
 		uruchamiany gdy VIEW komponentu się zainicjuje
@@ -460,7 +421,7 @@ export class CompHChild
   }
 
   ngAfterViewChecked(): void {
-    console.warn('ngAfterViewChecked');
+    console.warn('CHILD ngAfterViewChecked');
     /*
 		- URUCHAMIANY_GDY:	WIELE RAZY
 		uruchamiany gdy VIEW komponent jest wywołany przez Angular do sprawdzenia pod względem zmian
@@ -499,7 +460,7 @@ export class CompHChild
   }
 
   ngOnDestroy(): void {
-    console.warn('ngOnDestroy');
+    console.warn('CHILD ngOnDestroy');
     /*
 		- URUCHAMIANY_GDY:	TYLKO 1 RAZ
 		uruchamiany przez zniszczeniem instancji komponentu (odmonotwaniem/usunięciem go z DOM)
@@ -526,11 +487,115 @@ export class CompHChild
 					});
 		*/
   }
+}
 
-  /*
-	TO_DO
-	Rendering 	
-	afterNextRender 			Runs once the next time that all components have been rendered to the DOM.
-	afterEveryRender 			Runs every time all components have been rendered to the DOM.
-	*/
+// ###############################
+// ############################### NOWE PODEJŚCIE DO CYKLU ŻYCIA DLA 'SSR' - SERVER SIDE RENDERINGU
+// ############################### afterEveryRender && afterNextRender
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+@Component({
+  selector: 'CompH_LifecycleSSR',
+  imports: [],
+  template: `
+    <div>
+      <div>CompH_LifecycleSSR</div>
+      <div>
+        <span>SSR signal = {{ this.ssrSignal() }}</span>
+        <button (click)="updateSSRSignal()">update SSR signal</button>
+      </div>
+    </div>
+  `,
+})
+export class CompH_LifecycleSSR implements AfterViewInit, AfterViewChecked {
+  ssrSignal = signal(1);
+  updateSSRSignal = () => {
+    this.ssrSignal.update((prev) => prev + 1);
+  };
+
+  constructor() {
+    /*
+		afterEveryRender && afterNextRender
+		nie są to metody cyklu życia jak ngOnInit. 
+		to funkcje pomocnicze, które pozwalając na bezpieczny dostęp do przeglądarki.
+
+		Przy SSR haki cyklu życia np: 'ngOnInit' próbowały się odpalać i w przeglądarce, ale
+		też na serwerze (a tam nie ma window, document itp)
+		'afterNextRender' i 'afterEveryRender' rozwiązują problem: wykonują się TYLKO W PRZEGLADARCE.		
+		*/
+    afterNextRender(() => {
+      console.log(`SSR | afterNextRender`);
+      /*
+			- URUCHAMIANY_GDY:	TYLKO 1 RAZ
+			- przyjazny dla SSR.
+			- DZIAŁA PODOBNIE JAK 'ngAfterViewInit' 
+			- wykonuje się na samym końcu po wszystkich lifecycle hooks WSZYSTKICH KOMPONENTOW
+			- wywołanie w kontekcie komponentu (najlepiej konstruktor)
+
+			uruchamiany gdy VIEW komponentu się zainicjuje
+			Angular kończy renderowanie VIEW komponentu (template) oraz wszystkich jego komponentów dzieci.
+
+			stosujmey do:
+			- biblioteki JS z dostępem do DOM
+			-	zmiana fizycznego wygląd strony, praca na natywnym DOM. itp
+			*/
+    });
+
+    afterEveryRender(() => {
+      console.log(`SSR | afterEveryRender - DOMYŚLNA - mixedReadWrite`);
+      /*
+			- URUCHAMIANY_GDY:	WIELE RAZY
+				po każdym cyklu renderowania całego VIEW w przeglądarce
+			- przyjazny dla SSR.
+			- DZIAŁA PODOBNIE JAK 'ngAfterViewChecked' 
+			- wykonuje się na samym końcu po wszystkich lifecycle hooks WSZYSTKICH KOMPONENTOW
+			- wywołanie w kontekcie komponentu (najlepiej konstruktor)
+
+			STOSOWANIE:
+			- biblioteki JS z dostępem do DOM
+			-	zmiana fizycznego wygląd strony, praca na natywnym DOM. itp
+
+					afterEveryRender(() => {
+						// Wykona się po każdej zmianie widoku.
+						// Możesz tu np. mierzyć rozmiary elementów, by przeliczyć pozycję tooltipa. itp
+						const rect = document.querySelector('#target-element')?.getBoundingClientRect();
+						console.log('Aktualna pozycja celu:', rect);
+					});
+			*/
+    });
+
+    afterEveryRender({
+      /*
+      modyfikację DOM wpływają na performance dlatego Anuglar
+      wydzielił 4 fazy by go poprawić (poniżej w kolejności ich wykonania)
+			*/
+      earlyRead: () => {
+        // UNIKAĆ
+        // 1) by czytać z DOM, przed 'write'
+        console.log(`SSR | afterEveryRender | earlyRead | `);
+        return 1;
+      },
+      write: (arg) => {
+        // 2) możem zmienić DOM, ale NIE CZYTAĆ z niego
+        console.log(`SSR | afterEveryRender | write | arg = `, arg);
+        return arg + 1; // arg = 1 -> przekazane z 'earlyRead'
+      },
+      mixedReadWrite: (arg) => {
+        // DOMYŚLNA - jak nie ma podziały na fazy to jesteśmy w tej
+        // 3) mieszany 2 i 4
+        console.log(`SSR | afterEveryRender | mixedReadWrite | arg = `, arg);
+        return arg + 1; // arg = 2 -> przekazane z 'write'
+      },
+      read: (arg) => {
+        // 4) czytanie z DOM, NIGDY ZAPIS
+        console.log(`SSR | afterEveryRender | read | arg = `, arg);
+        return arg + 1; // arg = 3 -> przekazane z 'mixedReadWrite'
+      },
+    });
+  }
+  ngAfterViewInit(): void {
+    console.log(`SSR_NOT | ngAfterViewInit`);
+  }
+  ngAfterViewChecked(): void {
+    console.log(`SSR_NOT | ngAfterViewChecked`);
+  }
 }

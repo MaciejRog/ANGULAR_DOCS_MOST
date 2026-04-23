@@ -12,57 +12,75 @@ import {
 
 @Component({
   selector: 'app-comp-k',
+  imports: [
+    forwardRef(() => CompK_Parent), //
+    forwardRef(() => CompK_Child),
+  ],
   template: `
-    <app-comp-k-parent [parentInput]="1"
-      ><span #parentContent>parent kontent</span></app-comp-k-parent
-    >
-    <app-comp-k-child [parentInput]="1" [childInput]="1"
-      ><span #childContent>child kontent</span></app-comp-k-child
-    >
+    <!--  -->
+    <CompK_Parent [parentInput]="1">
+      <span #parentContent>parent kontent</span>
+    </CompK_Parent>
+    <br />
+    <hr />
+
+    <!--  -->
+    <CompK_Child [parentInput]="1" [childInput]="1">
+      <span #childContent>child kontent</span>
+    </CompK_Child>
+    <br />
+    <hr />
   `,
-  imports: [forwardRef(() => CompKParent), forwardRef(() => CompKPChild)],
 })
 export class CompK {}
 
 // ###############################
-// ############################### Inheritance dziedziczenie
+// ############################### DZIEDZICZENIE (INHERITANCE)
+// ############################### komponent RODZICA
 // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
 
-/*
-DZIEDZICZENIE:
-
-		klasa dziecka od rodzica dziedziczy:
-				- host bindings
-				- inputs 
-				- outputs
-				- lifecycle methods.
-
-			
-		NADPISYWANE SA DOMYŚLNIE:
-				- selector
-				- template 'szablon'
-
-		W konstruktorze podklasy/dziecka w 1 linii musi być wywołany 
-		konstruktor nadklasy/rodzica 'super()'
-
-		można nadpisać pola i metody
-				- NADPISANIE POLA 
-					override parentPole = 'CHILD';
-				-	NADPISANIE METODY
-					override ngOnInit() {
-						// super.ngOnInit();	<-- wywołanie metody z nadklasy
-						console.warn(`------- CHILD | ON_INIT`);
-					}
-*/
 @Component({
-  selector: 'app-comp-k-parent',
-  template: `<div #parent>parent</div>
-    <ng-content />`,
+  selector: 'CompK_Parent',
+  imports: [],
+  template: `
+    <div>
+      <div #parent>CompK_Parent</div>
+      <br />
+      <div>
+        <ng-content />
+      </div>
+    </div>
+  `,
   host: {
     '(click)': 'handleClick()',
   },
 })
-export class CompKParent implements OnInit {
+export class CompK_Parent implements OnInit {
+  /*
+  DZIEDZICZENIE (INHERITANCE) między komponentami
+
+  klasa/komponent dziecka DZIEDZICZY od klasy/komponentu rodzica:
+  - bindingi [property] [attributes]
+  - inputy
+  - outputy
+  - metody lifecycle
+    
+  klasa/komponent dziecka NADPISUJE/OVERWRITE od klasy/komponentu rodzica:
+  - selector
+  - template/szablon
+
+  UWAGA
+  W konstruktorze podklasy/dziecka w 1 linii musi być wywołany konstruktor nadklasy/rodzica czyli 'super()'
+
+  UWAGA, można nadpisać pola i metody
+  - nadpisanie pola
+    override parentPole = 'CHILD';
+  -	nadpisanie metod
+    override ngOnInit() {                   <-- metoda 'ngOnInit' istnieje w klasie rodzica
+      super.ngOnInit();	                    <-- wywołanie metody z nadklasy
+      console.warn(`CHILD | ngOnInit`);
+    }
+  */
   parentPole = 'PARENT';
   parentInput = input.required<number>();
   parentOutput = output<string>();
@@ -70,7 +88,7 @@ export class CompKParent implements OnInit {
   parentContent = contentChild('parentContent');
 
   handleClick = () => {
-    console.warn('CLICK');
+    console.warn('PARENT | CLICK');
   };
 
   constructor(private element: ElementRef) {
@@ -81,29 +99,40 @@ export class CompKParent implements OnInit {
         console.warn(`PARENT | parentOutput = `, this.parentOutput);
         console.warn(`PARENT | parentView = `, this.parentView());
         console.warn(`PARENT | parentContent = `, this.parentContent());
-        console.log('\n\n');
       },
     });
   }
   ngOnInit() {
-    console.warn(`------- PARENT | ON_INIT`);
+    console.warn(`PARENT | ngOnInit`);
   }
 }
 
+// ###############################
+// ############################### DZIEDZICZENIE (INHERITANCE)
+// ############################### komponent DZIECKA
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+
 @Component({
-  selector: 'app-comp-k-child',
-  template: `<div #child>child</div>
-    <ng-content />`,
+  selector: 'CompK_Child',
+  template: `
+    <div>
+      <div #child>CompK_Child</div>
+      <br />
+      <div>
+        <ng-content />
+      </div>
+    </div>
+  `,
 })
-export class CompKPChild extends CompKParent implements OnInit {
+export class CompK_Child extends CompK_Parent implements OnInit {
   override parentPole = 'CHILD';
   childInput = input.required<number>();
   childOutput = output<string>();
   childView = viewChild('child');
   childContent = contentChild('childContent');
 
-  // pole 'element' jest w nadklasie 'CompKParent'
-  //                       constructor(private element: ElementRef) {
+  // argument 'element' jest w nadklasie 'CompKParent'
+  // constructor(private element: ElementRef) {
   constructor(element: ElementRef) {
     super(element);
     afterEveryRender({
@@ -122,7 +151,7 @@ export class CompKPChild extends CompKParent implements OnInit {
   }
 
   override ngOnInit() {
-    // super.ngOnInit();	<--
-    console.warn(`------- CHILD | ON_INIT`);
+    super.ngOnInit(); // <- wywołanie 'ngOnInit' z nadklasy/rodzica
+    console.error(`CHILD | ngOnInit`);
   }
 }

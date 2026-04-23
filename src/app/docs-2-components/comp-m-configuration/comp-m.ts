@@ -13,129 +13,242 @@ import {
 
 @Component({
   selector: 'app-comp-m',
-  template: `
-    <p>Classic {{ valClassic.age }} <button (click)="changeClassic()">change</button></p>
-    <p>Signal {{ valSignal().age }} <button (click)="changeSignal()">change</button></p>
-    <hr />
-    <app-comp-m-child-a [valClassic]="valClassic" [valSignal]="valSignal()" />
-    <hr />
-    <app-comp-m-child-b />
-    <hr />
-    <app-comp-m-child-c />
-  `,
   imports: [
-    forwardRef(() => CompMChildA),
-    forwardRef(() => CompMChildB),
-    forwardRef(() => CompMChildC),
+    forwardRef(() => CompM_ChangeDetectionWrapper), //
+    forwardRef(() => CompM_Whitespaces),
+    forwardRef(() => CompM_CustomElementSchema),
   ],
-})
-export class CompM {
-  valClassic = { age: 1 };
-  valSignal = signal({ age: 1 });
+  template: `
+    <!--  -->
+    <CompM_ChangeDetectionWrapper />
+    <br />
+    <hr />
 
-  changeClassic = () => {
-    this.valClassic.age += 1;
+    <!--  -->
+    <CompM_Whitespaces />
+    <br />
+    <hr />
+
+    <!--  -->
+    <CompM_CustomElementSchema />
+    <br />
+    <hr />
+  `,
+})
+export class CompM {}
+
+// ###############################
+// ############################### jak komponent reaguje na zmiany
+// ###############################
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+@Component({
+  selector: 'CompM_ChangeDetectionWrapper',
+  imports: [
+    forwardRef(() => CompM_ChangeDetectionBase),
+    forwardRef(() => CompM_ChangeDetectionPush),
+  ],
+  template: `
+    <div>
+      <div>CompM_ChangeDetectionWrapper</div>
+      <br />
+      <div>
+        <div>object {{ this.classicObject.name }}</div>
+        <div>
+          <button (click)="updateObjectName()">update_object_name</button>
+          <button (click)="updateObjectRef()">update_object_ref</button>
+        </div>
+        <div>signal {{ this.signalObject().name }}</div>
+        <div>
+          <button (click)="updateSignalName()">update_signal_name</button>
+          <button (click)="updateSignalRef()">update_signal_ref</button>
+        </div>
+      </div>
+      <br />
+      <div>
+        <CompM_ChangeDetectionBase
+          [classicObject]="this.classicObject"
+          [signalObject]="this.signalObject()"
+        />
+        <CompM_ChangeDetectionPush
+          [classicObject]="this.classicObject"
+          [signalObject]="this.signalObject()"
+        />
+      </div>
+    </div>
+  `,
+})
+export class CompM_ChangeDetectionWrapper {
+  /*
+   */
+  classicObject = { name: 'obj_Aga' };
+  updateObjectName = () => {
+    this.classicObject.name += '_1';
+  };
+  updateObjectRef = () => {
+    if (this.classicObject.name.startsWith('obj_Aga')) {
+      this.classicObject = { name: 'obj_Maciej' };
+    } else {
+      this.classicObject = { name: 'obj_Aga' };
+    }
   };
 
-  changeSignal = () => {
-    this.valSignal.update((prev) => {
-      return {
-        ...prev,
-        age: prev.age + 1,
-      };
+  signalObject = signal({ name: 'signal_Aga' });
+  updateSignalName = () => {
+    this.signalObject.update((prev) => {
+      prev.name += '_1';
+      return prev;
     });
   };
+  updateSignalRef = () => {
+    if (this.signalObject().name.startsWith('signal_Aga')) {
+      this.signalObject.set({ name: 'signal_Maciej' });
+    } else {
+      this.signalObject.set({ name: 'signal_Aga' });
+    }
+  };
+
+  /*
+	ChangeDetection, czyli Strategie wykrywania zmian (co powoduje rerender dla komponentu)
+  - ChangeDetectionStrategy.Default (DOMYŚLNE)
+    sprawdza komponent i całe jego poddrzewo, przy każdym cyklu wykrywania zmian.
+    wywoływane przez KAŻDE ZDARZENIE W APLIKACJI
+
+  - ChangeDetectionStrategy.OnPush -> restrykcyjne i zalecane dla poprawy wydajności
+    sprawdza czy komponent nie potrzebuje aktualizacji DOM, wywoływane TYLKO NA:
+    - zmianę referencji 'inputów'
+    - 'output' komponentu:
+    - 'pipe async' Gdy Observable powiązany z szablonem wyemituje nową wartość.
+    - ręczne wywołanie za pomocą 'markForCheck()' z DI 'ChangeDetectorRef'
+          constructor(private cdr: ChangeDetectorRef) {}
+          updateData() {
+            //... 
+            this.cdr.markForCheck();    // <- Mówimy: "Przy najbliższej okazji sprawdź ten komponent"
+          }
+	*/
 }
 
 // ###############################
-// ############################### ChangeDetectionStrategy
 // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-
 @Component({
-  selector: 'app-comp-m-child-a',
+  selector: 'CompM_ChangeDetectionBase',
+  imports: [],
   template: `
-    <p>CHILD classic {{ valClassic.age }}</p>
-    <p>CHILD signal {{ valSignal().age }}</p>
+    <div>
+      <div>CompM_ChangeDetectionBase</div>
+      <div>
+        <span>object = {{ this.classicObject().name }}</span>
+        &nbsp;
+        <span>signal = {{ this.signalObject().name }}</span>
+      </div>
+    </div>
   `,
-  // changeDetection: ChangeDetectionStrategy.Default,
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  // changeDetection: ChangeDetectionStrategy.Default   // <- domyślna wartość
 })
-export class CompMChildA implements AfterViewChecked {
+export class CompM_ChangeDetectionBase {
   /*
-	Strategie wykrywania zmian:
-		- ChangeDetectionStrategy.Default (DOMYŚLNE)
-					Angular sprawdza komponent i całe jego poddrzewo 
-					przy każdym cyklu wykrywania zmian.
-					NA KAŻDE ZDARZENIE W APLIKACJI
-					NA: user interaction, network response, timers, and more.
+   */
+  classicObject = input.required<{ name: string }>();
+  signalObject = input.required<{ name: string }>();
 
-		- ChangeDetectionStrategy.OnPush
-					sprawdza tylko czy komponent nie potrzebuje aktualizacji DOM, NA:
-							- zmiana referencji @Input()
-							- Zdarzenie (Event) wewnątrz komponentu: 
-							- Pipe async: Gdy Observable powiązany z szablonem wyemituje nową wartość.
-							- Ręczne wywołanie: Gdy sam powiesz Angularowi: „Teraz sprawdź!” (markForCheck()).
-										constructor(private cdr: ChangeDetectorRef) {}
-										updateData() {
-											// Robimy coś poza Angularem lub w skomplikowany sposób
-											this.data = 'Nowa wartość';
-											// Mówimy: "Przy najbliższej okazji sprawdź ten komponent"
-											this.cdr.markForCheck();
-										}
-	*/
-  @Input({ required: true })
-  valClassic: { age: number } = { age: 0 };
-
-  valSignal = input.required<{ age: number }>();
-
-  ngAfterViewChecked(): void {
-    console.warn(
-      `${Math.random() * 10000} | AFTER_VIEW_CHECKED classic=${this.valClassic.age}, signal=${this.valSignal().age}`,
-    );
+  constructor() {
+    afterEveryRender(() => {
+      console.log(`changeDetection | Default |`);
+    });
   }
 }
 
 // ###############################
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+@Component({
+  selector: 'CompM_ChangeDetectionPush',
+  imports: [],
+  template: `
+    <div>
+      <div>CompM_ChangeDetectionPush</div>
+      <div>
+        <span>object = {{ this.classicObject().name }}</span>
+        &nbsp;
+        <span>signal = {{ this.signalObject().name }}</span>
+      </div>
+    </div>
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CompM_ChangeDetectionPush {
+  /*
+   */
+  classicObject = input.required<{ name: string }>();
+  signalObject = input.required<{ name: string }>();
+
+  constructor() {
+    afterEveryRender(() => {
+      console.log(`changeDetection | OnPush |`);
+    });
+  }
+}
+
+// ###############################
+// ############################### zachowanie lub niezachowanie spacji i enterów w
 // ############################### PreserveWhitespaces
 // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-
 @Component({
-  selector: 'app-comp-m-child-b',
+  selector: 'CompM_Whitespaces',
+  imports: [],
   template: `
-    <p>Tutaj mamy trochę wcięć</p>
+    <div>
+      <div>CompM_Whitespaces</div>
+      <div>
+        <p>Par_1</p>
 
-    <p>i enterów nadanych</p>
+        <p>Par_2</p>
+      </div>
+    </div>
   `,
-  // preserveWhitespaces: true,
-  /* WYRENDERUJE SZABLON JAKO:
-	<app-comp-m-child-b>
-    <p>Tutaj mamy trochę wcięć</p>
-
-    <p>i enterów nadanych</p>
-  </app-comp-m-child-b>
-	*/
-  preserveWhitespaces: false,
-  /* WYRENDERUJE SZABLON JAKO:
-	<app-comp-m-child-b><p>Tutaj mamy trochę wcięć</p><p>i enterów nadanych</p></app-comp-m-child-b>
-	*/
+  preserveWhitespaces: true,
+  // preserveWhitespaces: false, // <- DOMYŚLNIE
 })
-export class CompMChildB {
+export class CompM_Whitespaces {
   /*
-	Domyślnie Angular usuwa i kompresuje zbędne spacje w szablonach, 
-	najczęściej w nowych wierszach i wcięciach
+	Domyślnie Angular usuwa i kompresuje zbędne spacje w szablonach,
+
+  preserveWhitespaces: true, -> WYRENDERUJE SZABLON JAKO:
+  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+  <CompM_Whitespaces>
+    <<div>
+      <div>CompM_Whitespaces</div>
+      <div>
+        <p>Par_1</p>
+
+        <p>Par_2</p>
+      </div>
+    </div>
+  </CompM_Whitespaces
+
+  preserveWhitespaces: false,   -> WYRENDERUJE SZABLON JAKO:
+  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+	<compm_whitespaces><div><div>CompM_Whitespaces</div><div><p>Par_1</p><p>Par_2</p></div></div></compm_whitespaces>
 	*/
 }
 
 // ###############################
+// ############################### Brak błedu na tagi html, o których Angular nie wie!
 // ############################### Custom element schemas
 // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-
 @Component({
-  selector: 'app-comp-m-child-c',
-  template: ``,
+  selector: 'CompM_CustomElementSchema',
+  imports: [],
+  template: `
+    <div>
+      <div>CompM_CustomElementSchema</div>
+      <br />
+      <div>
+        <takiego-taga-to-na-bank-nie-ma />
+      </div>
+    </div>
+  `,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class CompMChildC {
+export class CompM_CustomElementSchema {
   /*
 	DOMYŚLNIE ANGULAR rzuci BŁĘDEM gdy napotka nieznany tag HTML
 	można to wyłączyć, dzieki opcji

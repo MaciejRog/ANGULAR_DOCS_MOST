@@ -1,4 +1,5 @@
 import {
+  afterEveryRender,
   Component,
   forwardRef,
   HostAttributeToken,
@@ -9,56 +10,56 @@ import {
 
 @Component({
   selector: 'app-comp-g',
-  template: `
-    <p>HOST 1</p>
-    <app-comp-g-child-a />
-    <p>HOST 2</p>
-    <app-comp-g-child-a class="active" />
-    <p>HOST 3</p>
-    <app-comp-g-child-b />
-    <app-comp-g-child-d />
-  `,
   imports: [
-    forwardRef(() => CompGChildA),
-    forwardRef(() => CompGChildB),
-    forwardRef(() => CompGChildD),
+    forwardRef(() => CompG_HostStyle),
+    forwardRef(() => CompG_HostConfigurationInDecorator),
+    forwardRef(() => CompG_HostConfigurationByFields),
+    forwardRef(() => CompG_HostCollision),
   ],
+  template: `
+    <!--  -->
+    <CompG_HostStyle />
+    <CompG_HostStyle class="active" />
+    <br />
+    <hr />
+
+    <!--  -->
+    <CompG_HostConfigurationInDecorator />
+    <br />
+    <hr />
+
+    <!--  -->
+    <CompG_HostConfigurationByFields custom-attr="Maciej" />
+    <br />
+    <hr />
+
+    <!--  -->
+    <CompG_HostCollision />
+    <br />
+    <hr />
+  `,
 })
 export class CompG {
   /*
-	HOST to obiekt DOM który odzwierciedla instancję komponentu (dopasowanie selectora komponentu)
-	komponent 	-> CompGChild
-	Host 				-> <app-comp-g-child />
-
-	Właściwości
-			- można go ostylować w CSS za pomocą specjalnej pseudoklasy | :host { ...style }
-			- można go opisać w konstruktorze w polu 'host', tj:
-					- nadać mu atrybuty / właściwości
-					- klasę CSS i style
-					- eventy, które ma nasłuchiwać
-					bardzo podobne do bindowania szablonu (template binding)
-			- można opisać pojedyńcze atrybury/właściwości hosta poprzez
-					- HostBinding('class')
-			- można dodać obsługę eventów przez Hosta
-					- 
-	
-
-	elegancko propaguje 
-	Łapie event wywołany na click hosta 'app-comp-g-child-c'
+	HOST to obiekt w DOM który odzwierciedla instancję komponentu (dopasowanie selectora komponentu)
+	KOMPONENT 	-> CompGChild
+	HOST 				-> <app-comp-g-child />
 	*/
-  @HostListener('click', ['$event'])
-  handleClick = (event: Event) => {
-    console.warn(`@HOST COMP_G handle CLICK | event = `, event);
-  };
 }
 
 // ###############################
 // ############################### stylowanie hosta
+// ############################### psudoklasa ':host'
 // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-
 @Component({
-  selector: 'app-comp-g-child-a',
-  template: ``,
+  selector: 'CompG_HostStyle',
+  imports: [],
+  template: `
+    <div>
+      <div>CompG_HostStyle</div>
+      <br />
+    </div>
+  `,
   styles: `
     /* dzięki temu ostylowany będzie HOST  */
     :host {
@@ -71,68 +72,92 @@ export class CompG {
     }
   `,
 })
-export class CompGChildA {
+export class CompG_HostStyle {
   /*
-	można odczytać wartości przekazane do atrybutów / property HOSTA z poziomu RODZICA 
-	za pomocą 'HostAttributeToken'
-     <app-comp-g-child-a />                     -> hostClass === null
-     <app-comp-g-child-a class="active" />      -> hostClass === 'active'
-	*/
-  hostClass = inject(new HostAttributeToken('class'), { optional: true });
-
-  constructor() {
-    console.warn(`hostClass = `, this.hostClass);
-  }
+  HOST można stylować w CSS za pomocą pseudoklasy | :host { ...style }
+   */
 }
 
-// ############################### ZALECANE
-// ############################### konfiguracja hosta w konstruktorze
+// ###############################
+// ############################### Zalecane podejście do konfiruacja HOSTA
+// ############################### poperty 'host' w dekoratorze
 // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-
 @Component({
-  selector: 'app-comp-g-child-b',
-  template: `TO JEST template `,
+  selector: 'CompG_HostConfigurationInDecorator',
+  imports: [],
+  template: `
+    <div>
+      <div>CompG_HostConfigurationInDecorator</div>
+      <br />
+    </div>
+  `,
   host: {
     role: 'slider',
     '[attr.aria-valuenow]': 'value',
     '[class.active]': 'isActive',
     '[style.background]': `hasError ? 'red' : 'green'`,
-    '[style.--color]': '"blue"', // bind do CSS custom property (CSS var )
+    '[style.--color]': '"blue"', // bind do CSS custom property (CSS var)
     '[tabIndex]': 'disabled ? -1 : 0',
     '(click)': 'handleClick($event)',
   },
 })
-export class CompGChildB {
+export class CompG_HostConfigurationInDecorator {
   /*
-	<app-comp-g-child-b 
-		role="slider" 
+  konfiguracja HOSTA 
+  zalecane podejście poprzez pole 'host' w dekoratorze komponentu, pozwa określić:
+  - atrybuty / properties tagu hosta
+  - klasę CSS + style CSS
+  - eventy do nasłuchu
+
+  w efekcie z powyższej konfiguracji powstaje:
+  <CompG_HostConfigurationInDecorator
+    role="slider" 
 		tabindex="0" 
 		aria-valuenow="0" 
 		style="background: green;"
-	/>
-	*/
+  />
+  */
   value: number = 0;
   disabled: boolean = false;
   isActive = false;
   hasError = false;
   handleClick = (event: Event) => {
-    console.warn(`handleClick | event = `, event);
+    console.log(`ConfigurationInDecorator | event = `, event);
   };
 }
 
-// ############################### NIE ZALECANE (TYLKO DO WSTECZNEJ KOMPATYBILNOŚCI)
-// ############################### konfiguracja hosta Dekoratory
-// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV @HostBinding i
-
+// ###############################
+// ############################### Nie zalecana konfiguracja HOSTA
+// ############################### dekoratory '@HostBinding' i '@HostListener'
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
 @Component({
-  selector: 'app-comp-g-child-c',
-  template: `TO JEST template `,
+  selector: 'CompG_HostConfigurationByFields',
+  imports: [
+    forwardRef(() => CompG_HostEvent), //
+  ],
+  template: `
+    <div>
+      <div>CompG_HostConfigurationByFields</div>
+      <br />
+
+      <!--  -->
+      <CompG_HostEvent />
+      <br />
+    </div>
+  `,
 })
-export class CompGChildC {
+export class CompG_HostConfigurationByFields {
   /*
-	@HostBinding(nazwaAtrybutu)
-	pozwala ustawić wartość atrybutu/property dla HOSTA
-   */
+  można dodać obsługę atrybutów/properties przez dekorator '@HostBinding'
+  można dodać obsługę eventów przez dekorator '@HostListener'
+
+  <compg_hostconfigurationbyfields 
+    tabindex="0" 
+    class="ala_ma_kota"
+  >
+    //...
+  </compg_hostconfigurationbyfields>
+  */
   @HostBinding('class')
   value = 'ala_ma_kota';
 
@@ -141,57 +166,104 @@ export class CompGChildC {
     return 0;
   }
 
+  @HostListener('click', ['$event'])
+  handleClick = (event: Event) => {
+    console.log(`HOST_PARENT | click event = `, event);
+  };
+
   /*
-	@HostListener(nazwaEventu, [tablicaArgumentow])
-	pozwala nasłuchiwać eventów na host
+  za pomocą DI można też odczytać wartość atrybutów nadanych na HOST
+  */
+  hostAttrToken = inject(new HostAttributeToken('custom-attr'), { optional: true });
+  constructor() {
+    afterEveryRender(() => {
+      console.log('HostAttributeToken | custom-attr = ', this.hostAttrToken);
+    });
+  }
+}
+
+// ###############################
+// ############################### do propagowanie 'eventu' click
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+@Component({
+  selector: 'CompG_HostEvent',
+  imports: [],
+  template: `
+    <div>
+      <div>CompG_HostEvent</div>
+      <br />
+    </div>
+  `,
+})
+export class CompG_HostEvent {
+  /*
+  kliknięcie w ten komponent propaguje w górę drzewa DOM i powouje wywołanie 'handleClick' 
+  dla PARENT i CHILD
    */
   @HostListener('click', ['$event'])
   handleClick = (event: Event) => {
-    console.warn(`@HOST handle CLICK | event = `, event);
+    console.log(`HOST_CHILD | click event = `, event);
   };
 }
 
 // ###############################
-// ############################### KOLIZJA
+// ############################### wartość atrybutów przy kolizji
 // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-
-/*
-OSTATECZNY WYNIK
-
-<app-comp-g-child-d-child 
-	id="statyczna1" 
-	customa="dynamiczna1" 
-	customb="dynamiczna3"
->
-	<div>KOLIZJE !</div><
-/app-comp-g-child-d-child>
-
-										RODZIC			DZIECKO
-	id 								static			static 		-> RODZIC static
-	attr.customa			static			dynamic		-> DZIECKO dynamic 
-	attr.customb			dynamic			dynamic		-> DZIECKO dynamic 
-*/
 @Component({
-  selector: 'app-comp-g-child-d',
+  selector: 'CompG_HostCollision',
+  imports: [
+    forwardRef(() => CompG_HostCollisionChild), //
+  ],
   template: `
-    <app-comp-g-child-d-child id="statyczna1" customA="statyczna3" [attr.customB]="dynamiczna2" />
+    <div>
+      <div>CompG_HostCollision</div>
+      <br />
+
+      <CompG_HostCollisionChild
+        id="parent_stat_id"
+        customA="parent_stat_customA"
+        [attr.customB]="parentDynamicCustomB"
+      />
+    </div>
   `,
-  imports: [forwardRef(() => CompGChildDChild)],
 })
-export class CompGChildD {
-  dynamiczna2 = 'dynamiczna2';
+export class CompG_HostCollision {
+  /*
+  KOLIZJE, między wartościami nadanymi na HOST (PARENT) vs nadanymi w DEKORATORZE KOMPONENTU (CHILD)
+
+  									PARENT			        CHILD
+	id 								parent_static			  child_static 		  -> parent_static
+	attr.customA			parent_static			  child_dynamic		  -> child_dynamic 
+	attr.customB			parent_dynamic			child_dynamic		  -> child_dynamic
+
+  OSTATECZNIE wartości atrybutów na HOST
+  <compg_hostcollisionchild 
+    id="parent_stat_id" 
+    customa="child_dynamic_customA" 
+    customb="child_dynamic_customB" 
+  />
+   */
+  parentDynamicCustomB = 'parent_dynamic_customB';
 }
 
 @Component({
-  selector: 'app-comp-g-child-d-child',
-  template: `<div>KOLIZJE !</div>`,
+  selector: 'CompG_HostCollisionChild',
+  imports: [],
+  template: `
+    <div>
+      <div>CompG_HostCollisionChild</div>
+      <br />
+    </div>
+  `,
   host: {
-    id: 'statyczna2',
-    '[attr.customA]': 'dynamiczna1',
-    '[attr.customB]': 'dynamiczna3',
+    id: 'child_stat_id',
+    '[attr.customA]': 'childDynamicCustomA',
+    '[attr.customB]': 'childDynamicCustomB',
   },
 })
-export class CompGChildDChild {
-  dynamiczna1 = 'dynamiczna1';
-  dynamiczna3 = 'dynamiczna3';
+export class CompG_HostCollisionChild {
+  /*
+   */
+  childDynamicCustomA = 'child_dynamic_customA';
+  childDynamicCustomB = 'child_dynamic_customB';
 }

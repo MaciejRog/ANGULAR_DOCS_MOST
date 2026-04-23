@@ -10,11 +10,11 @@ import { SignalD } from './signal-d-effects/signal-d';
   imports: [SignalA, SignalAA, SignalB, SignalC, SignalD],
   template: `
     <div class="list">
-      <!-- <app-signal-a></app-signal-a> -->
+      <app-signal-a></app-signal-a>
       <!-- <app-signal-aa></app-signal-aa> -->
       <!-- <app-signal-b></app-signal-b> -->
       <!-- <app-signal-c></app-signal-c> -->
-      <app-signal-d></app-signal-d>
+      <!-- <app-signal-d></app-signal-d> -->
     </div>
   `,
   styles: `

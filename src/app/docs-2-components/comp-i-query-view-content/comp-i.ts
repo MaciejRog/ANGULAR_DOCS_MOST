@@ -19,164 +19,166 @@ import {
 
 @Component({
   selector: 'app-comp-i',
+  imports: [
+    forwardRef(() => CompI_ViewQueries), //
+    forwardRef(() => CompI_ContentQueriesWrapper),
+    forwardRef(() => CompI_QueriesAdvance),
+    forwardRef(() => CompIMatrioszkaA),
+    forwardRef(() => CompIMatrioszkaC),
+    forwardRef(() => CompI_QueryChild),
+  ],
   template: `
-    <app-comp-i-child>
-      <h1 #contentRef>CONTNET_ELEMENT_1</h1>
-      <h1 #contentRef>CONTNET_ELEMENT_2</h1>
-      <app-comp-i-child-content-child id="1" #contentComp />
-      <app-comp-i-child-content-child id="2" />
-    </app-comp-i-child>
+    <!--  -->
+    <CompI_ViewQueries />
+    <br />
     <hr />
-    <app-comp-i-child-b>
+
+    <!--  -->
+    <CompI_ContentQueriesWrapper />
+    <br />
+    <hr />
+
+    <!--  -->
+    <CompI_QueriesAdvance>
       <h1 #contentRef>CONTNET_ELEMENT_1</h1>
       <h1 #contentRef>CONTNET_ELEMENT_2</h1>
-      <app-comp-i-child-content-child id="1" #contentComp />
-      <app-comp-i-child-content-child id="2" />
+      <CompI_QueryChild name="advance-1" #contentComp />
+      <CompI_QueryChild name="advance-2" />
       <div>
         <app-comp-i-matrioszka-a>
           <app-comp-i-matrioszka-c />
         </app-comp-i-matrioszka-a>
       </div>
-    </app-comp-i-child-b>
+    </CompI_QueriesAdvance>
+    <br />
+    <hr />
   `,
-  imports: [
-    forwardRef(() => CompIChild),
-    forwardRef(() => CompIChildContentChild),
-    forwardRef(() => CompIChildB),
-    forwardRef(() => CompIMatrioszkaA),
-    forwardRef(() => CompIMatrioszkaC),
-  ],
 })
-export class CompI {}
+export class CompI {
+  /*
+	są 2 rodzaje zapytań (queries)
+	VIEW QUERY && CONTENT QUERY
+
+	queries/zapytania slużą do odczytania wartości z DOM
+	Wszystkie queries zwracają sygnały odzwierciedlające aktualne wyniki
+
+	queries znajdą element jeśli ten jest w DOM przeglądarki, jeśli nie zwrócą 'udefined'
+	UWAGA -> nie widzą elementów schowanych np przez '@if / *ngIf'
+
+  VIEW/CONTENT QUERY 
+	pobranie referencji do elementów znajdujących się w szablonie/VIEW komponentu. Mogą to być:
+  - Zwykłe elementy HTML (np. <div>, <input>).
+  - Inne komponenty Angulara
+  - Dyrektywy.
+
+  TRF -> TEMPALTE REFERENCE VARIABLE
+	Możemy oznakować element DOM referencję aby później móc go pobrać
+	<p #myDOM>VIEW_DOM_ELEMENT</p>		-> referencja '#myDOM'
+	UWAGA
+	tej samej referencji może używać WIELE elementów 
+
+  QUERY przyjmuje jako argument, możliwe wartości:
+	- TEMPLATE_REF                         viewChild('myDOM');						// <p #myDOM></p>
+	- klasę komponentu/dyrektywy           viewChild(klasaKomponentu);
+	UWAGA
+	selectory CSS -> NIE są obsługiwane jako argumenty w queries
+	*/
+  /*
+  CIEKAWOSTKA 
+  QUERY wraz z DI ProviderToken 
+      const SUB_ITEM = new InjectionToken<string>('sub-item');
+      @Component({
+        //...
+        providers: [{provide: SUB_ITEM, useValue: 'special-item'}],
+      })
+      export class SpecialItem {}
+      @Component({
+        //...
+      })
+      export class CustomList {
+        subItemType = contentChild(SUB_ITEM);
+      }
+  */
+}
+
+@Component({
+  selector: 'CompI_QueryChild',
+  imports: [],
+  template: `
+    <div>
+      <div>CompI_QueryChild - {{ name() }}</div>
+      <br />
+    </div>
+  `,
+})
+export class CompI_QueryChild {
+  name = input.required<string>();
+}
 
 // ###############################
-// ###############################
+// ############################### dostęp do elementów DOM w szablonie
+// ############################### viewChild & viewChildren
 // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
 
 @Component({
-  selector: 'app-comp-i-child-content-child',
-  template: `<div>CONTENT_CHILD_COMPONENT_{{ id() }}</div>`,
-})
-export class CompIChildContentChild {
-  id = input.required<number | string>();
-}
-
-@Component({
-  selector: 'app-comp-i-child-view-child',
-  template: `<div>VIEW_CHILD_COMPONENT_{{ id() }}</div>`,
-})
-export class CompIChildViewChild {
-  id = input.required<number | string>();
-}
-
-@Component({
-  selector: 'app-comp-i-child',
+  selector: 'CompI_ViewQueries',
+  imports: [CompI_QueryChild],
   template: `
-    <p #myDOM>VIEW_DOM_ELEMENT_1</p>
-    <p #myDOM>VIEW_DOM_ELEMENT_2</p>
-    <app-comp-i-child-view-child id="1" #myComp />
-    <app-comp-i-child-view-child id="2" />
-    <ng-content></ng-content>
+    <div>
+      <div>CompI_ViewQueries</div>
+      <br />
+
+      <div>
+        <p #myDOM>VIEW_DOM_ELEMENT_1</p>
+        <p #myDOM>VIEW_DOM_ELEMENT_2</p>
+        <CompI_QueryChild name="view-1" #myComp />
+        <CompI_QueryChild name="view-2" />
+      </div>
+    </div>
   `,
-  imports: [CompIChildViewChild],
 })
-export class CompIChild {
+export class CompI_ViewQueries {
   /*
-	są 2 rodzaje zapytań (queries)
-	view queries && content queries.
+  VIEW QUERIES dostępne są po: 'ngAfterViewInit'
 
-	zapytania slużą do odczytania wartości z
-	child components, directives, DOM elements itp..
-	Wszystkie funkcje zapytań zwracają sygnały odzwierciedlające najbardziej aktualne wyniki
-
-	queries znajdzie element jeśli jest w DOM przeglądarki,
-	jeśli nie zwróci 'udefined'
-	nie widzi elementów schowanych np przez '@if / *ngIf'
-	*/
+	Dostępne są 2 rodzaje QUERY:
+  SYGNAŁOWE:
+  - viewChild    (1-wszy pasujący element)
+  - @viewChild   (1-wszy pasujący element
+  DEKORATORY:
+  - viewChildren
+	-	@viewChildren
+  */
   /*
+  @viewChild, zwraca: 
+  - instancję komponentu	
+  - ElementRef						| opakowanie dla elementu DOM (przy odpytaniu nie wie czy to natywny HTML czy KOMPONENT)
+  
+  @viewChildren, zwraca:
+  - Tablicę instancji komponentów
+  - QueryList<ElementRef<HTMLElement>>	| opakowanie wielu elementów DOM
+                                          lepsza niż zwykła tablica, bo, automatycznie się zaktualizuje!
+                                          UWAGA - tylko dla @dekoratorów
 
-
-	View Queries
-	mechanizm, który pozwala klasie komponentu uzyskać referencję 
-	do elementów znajdujących się w jego własnym szablonie VIEW. Mogą to być:
-    - Zwykłe elementy HTML (np. <div>, <input>).
-    - Inne komponenty Angulara, których używasz w swoim HTML-u.
-    - Dyrektywy.
-
-	Możemy oznakować element DOM referencję aby później móc go pobrać (template reference variable)
-	<p #myDOM>VIEW_DOM_ELEMENT</p>		-> referencja '#myDOM'
-	UWAGA
-			tej samej referencji może używać WIELE elementów 
-
-	Query przyjmuje jako argument LOKATOR, możliwe wartości:
-			viewChildEl = viewChild('myDOM');						// template ref 'myDOM' <p #myDOM></p>
-			viewChildEl = viewChild(klasaKomponentu);
-			viewChildEl = viewChild(klasaDyrektywy);
-			ProviderToken !!!!
-					const SUB_ITEM = new InjectionToken<string>('sub-item');
-					@Component({
-						//...
-						providers: [{provide: SUB_ITEM, useValue: 'special-item'}],
-					})
-					export class SpecialItem {}
-					@Component({
-						//...
-					})
-					export class CustomList {
-						subItemType = contentChild(SUB_ITEM);
-					}
-	UWAGA
-			Selectory CSS -> NIE SA OBSŁUGIWANE jako queries
-
-
-	INFO O DEKORATORACH @:
-			@viewChild, zwraca: 
-			- ElementRef						| opakowanie DOM
-																przy dostępie angular nie wie co zastanie w DOM (natywny HTML czy komponent)
-																więc dlatego bezpośrednie tagi html opakowuje
-			- instancję komponentu	|
-
-			@viewChildren, zwraca:
-			- QueryList<ElementRef<HTMLElement>>	| opakowanie wielu elementów DOM
-																							QueryList lepsza niż zwykła tablica, bo jeśli np. 
-																							użyjesz *ngFor i lista się zmieni, 
-																							QueryList automatycznie się zaktualizuje!
-																							UWAGA - tylko dla @dekoratorów :)
-			- Tablicę instancji komponentów
-
-
-			'@ContentChild' i '@ContentChildren' są dostepne od 'ngAfterContentInit'
-			'@viewChild' i '@viewChildren' są dostepne od 'ngAfterViewInit'
-
-			-	OPCJA STATYCZNA: { static: true } DLA @ViewChild i @ContentChild
-					domyślna wartość to 'false' wtedy dostęp to view/content dostępny dopiero po 'afterViewXXX' lub 'afterContentXXX'
-					z 'true' dostęp już od 'onInit' bo mówimy, że element który chcemy dostać jest na 100% w DOM
-					w tym, że nie jest warunkowo renderowany 
-					DZIAŁA GDY:
-							- element nie jest w '*ngIf' lub '*ngFor.'
-							- element nie jest w '<ng-template>.'
-							- Jest obecny w VIEW zawsze.
-					UWAGA!!!:
-							- brak updatu po inicjalizacji
+	OPCJA STATYCZNA -> { static: true } DLA @ViewChild i @ContentChild
+  domyślna 'false' -> dostęp to view/content od 'afterViewXXX' lub 'afterContentXXX'
+  z 'true' dostęp od 'onInit'. To mówi, że element który chcemy dostać jest na 100% w DOM od powstania szablonu
+  DZIAŁA GDY:
+    - element nie jest w '*ngIf' lub '*ngFor.'
+    - element nie jest w '<ng-template>.'
+    - Jest obecny w VIEW zawsze.
+  UWAGA!!!:
+    - brak updatu zmiennej po inicjalizacji
 			
 	*/
   constructor() {
     afterEveryRender({
       read: () => {
-        console.warn(`viewChildEl1 | viewChild = `, this.viewChildEl1()?.nativeElement);
-        console.warn(`viewChildEl2 | @ViewChild = `, this.viewChildEl2);
-        console.warn(`viewChildrenEl1 | viewChildren = `, this.viewChildrenEl1());
-        console.warn(`viewChildrenEl2 | @ViewChildren = `, this.viewChildrenEl2);
-        //
-        console.warn(`\n\n`);
-        //
-        console.warn(`contentChildEl1 | contentChild = `, this.contentChildEl1()?.nativeElement);
-        console.warn(`contentChildEl2 | @ContentChild = `, this.contentChildEl2);
-        console.warn(`contentChildrenEl1 | contentChildren = `, this.contentChildrenEl1());
-        console.warn(`contentChildrenEl2 | @ContentChildren= `, this.contentChildrenEl2);
-        //
-        console.warn(`\n\n`);
-        //
+        console.log(`\n\n`);
+        console.warn(`VIEW | signal viewChild = `, this.viewChildEl1()?.nativeElement);
+        console.warn(`VIEW | @ViewChild = `, this.viewChildEl2);
+        console.warn(`VIEW | signal viewChildren = `, this.viewChildrenEl1());
+        console.warn(`VIEW | @ViewChildren = `, this.viewChildrenEl2);
       },
     });
   }
@@ -185,32 +187,92 @@ export class CompIChild {
   viewChildEl1 = viewChild<ElementRef<HTMLParagraphElement>>('myDOM'); // referencja była '#myDOM'
   // viewChildEl1 = viewChild<ElementRef>('myComp');									 // <- nie znajdzie komponentu przed REF 'udefined'
 
-  @ViewChild(CompIChildViewChild)
-  viewChildEl2!: CompIChildViewChild;
+  @ViewChild(CompI_QueryChild)
+  viewChildEl2!: CompI_QueryChild;
 
   // pobranie listy elementów
-  viewChildrenEl1 = viewChildren(CompIChildViewChild);
+  viewChildrenEl1 = viewChildren(CompI_QueryChild);
   // viewChildrenEl1 = viewChildren<ElementRef<HTMLParagraphElement>>('myDOM'); // TEŻ OK
 
   @ViewChildren('myDOM')
   viewChildrenEl2!: QueryList<ElementRef<HTMLParagraphElement>>;
+}
 
+// ###############################
+// ############################### dostęp do elementów DOM w kontencie
+// ############################### contentChild & contentChildren
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+@Component({
+  selector: 'CompI_ContentQueriesWrapper',
+  imports: [
+    CompI_QueryChild, //
+    forwardRef(() => CompI_ContentQueries),
+  ],
+  template: `
+    <div>
+      <div>CompI_ContentQueriesWrapper</div>
+      <br />
+
+      <CompI_ContentQueries>
+        <p #myDOM>VIEW_DOM_ELEMENT_1</p>
+        <p #myDOM>VIEW_DOM_ELEMENT_2</p>
+        <CompI_QueryChild name="view-1" #myComp />
+        <CompI_QueryChild name="view-2" />
+      </CompI_ContentQueries>
+    </div>
+  `,
+})
+export class CompI_ContentQueriesWrapper {}
+
+@Component({
+  selector: 'CompI_ContentQueries',
+  imports: [],
+  template: `
+    <div>
+      <div>CompI_ContentQueries</div>
+      <br />
+
+      <div>
+        <ng-content />
+      </div>
+    </div>
+  `,
+})
+export class CompI_ContentQueries {
   /*
+  VIEW QUERIES dostępne są po: 'ngAfterContentInit'
 
-
-	Content Queries
-	Identyczny temat jak ViewQueries tylko dla KONTENTU
+	Dostępne są 2 rodzaje QUERY:
+  SYGNAŁOWE:
+  - contentChild    (1-wszy pasujący element)
+  - @contentChild   (1-wszy pasujący element
+  DEKORATORY:
+  - contentChildren
+	-	@contentChildren
+  
+	Identyczne jak VIEW queries, ale dla kontentu
 	*/
+  constructor() {
+    afterEveryRender({
+      read: () => {
+        console.log(`\n\n`);
+        console.warn(`CONTENT | signal contentChild = `, this.contentChildEl1()?.nativeElement);
+        console.warn(`CONTENT | @ContentChild = `, this.contentChildEl2);
+        console.warn(`CONTENT | signal contentChildren = `, this.contentChildrenEl1());
+        console.warn(`CONTENT | @ContentChildren= `, this.contentChildrenEl2);
+      },
+    });
+  }
 
   // Pobranie JEDEN elemnt (Pierwszy, który ma referencję)
   contentChildEl1 = contentChild<ElementRef<HTMLParagraphElement>>('contentRef'); // referencja była '#myDOM'
   // contentChildEl1 = contentChild<ElementRef>('contentComp'); // <- nie znajdzie komponentu przed REF 'udefined'
 
-  @ContentChild(CompIChildContentChild)
-  contentChildEl2!: CompIChildContentChild;
+  @ContentChild(CompI_QueryChild)
+  contentChildEl2!: CompI_QueryChild;
 
   // pobranie listy elementów
-  contentChildrenEl1 = contentChildren(CompIChildContentChild);
+  contentChildrenEl1 = contentChildren(CompI_QueryChild);
   // contentChildrenEl1 = contentChildren<ElementRef<HTMLParagraphElement>>('contentRef'); // TEŻ OK
 
   @ContentChildren('contentRef')
@@ -218,24 +280,27 @@ export class CompIChild {
 }
 
 // ###############################
-// ###############################
+// ############################### ZAAWANSOWE PODEJŚCIE DO QUERIES
+// ############################### signal
 // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
 
 @Component({
   selector: 'app-comp-i-matrioszka-a',
+  imports: [forwardRef(() => CompIMatrioszkaB)],
   template: `
     <p>MATRIOSZKA_A</p>
     <app-comp-i-matrioszka-b />
     <ng-content></ng-content>
   `,
-  imports: [forwardRef(() => CompIMatrioszkaB)],
 })
 export class CompIMatrioszkaA {}
+
 @Component({
   selector: 'app-comp-i-matrioszka-b',
   template: ` <p>MATRIOSZKA_B</p> `,
 })
 export class CompIMatrioszkaB {}
+
 @Component({
   selector: 'app-comp-i-matrioszka-c',
   template: ` <p>MATRIOSZKA_C</p> `,
@@ -243,75 +308,77 @@ export class CompIMatrioszkaB {}
 export class CompIMatrioszkaC {}
 
 @Component({
-  selector: 'app-comp-i-child-b',
+  selector: 'CompI_QueriesAdvance',
+  imports: [CompI_QueryChild],
   template: `
-    <p #myDOM>B - VIEW_DOM_ELEMENT_1</p>
-    <p #myDOM>B - VIEW_DOM_ELEMENT_2</p>
-    <app-comp-i-child-view-child id="B-1" #myComp />
-    <app-comp-i-child-view-child id="B-2" />
-    <ng-content></ng-content>
+    <div>
+      <div>CompI_QueriesAdvance</div>
+      <br />
+
+      <div>
+        <p #myDOM>B - VIEW_DOM_ELEMENT_1</p>
+        <p #myDOM>B - VIEW_DOM_ELEMENT_2</p>
+        <CompI_QueryChild name="B-1" #myComp />
+        <CompI_QueryChild name="B-2" />
+        <ng-content></ng-content>
+      </div>
+    </div>
   `,
-  imports: [CompIChildViewChild],
 })
-export class CompIChildB {
+export class CompI_QueriesAdvance {
   constructor() {
     afterEveryRender({
       read: () => {
-        //
-        console.warn(`\n\n`);
-        //
-        console.warn(`KOMP B | required | zmienna5 = `, this.zmienna5());
-        console.warn(`KOMP B | required | zmienna6 = `, this.zmienna6());
-        //
-        console.warn(`\n\n`);
-        //
-        console.warn(`KOMP B | descendants | contentChild DEFAULT = `, this.zmianna10a());
-        console.warn(`KOMP B | descendants | contentChild TRUE = `, this.zmianna10b());
-        console.warn(`KOMP B | descendants | contentChild FALSE = `, this.zmianna10c());
-        console.warn(`KOMP B | descendants | contentChildren DEFAULT = `, this.zmianna11a());
-        console.warn(`KOMP B | descendants | contentChildren TRUE = `, this.zmianna11b());
-        console.warn(`KOMP B | descendants | contentChildren FALSE = `, this.zmianna11c());
+        console.log(`\n\n`);
+        console.warn(`ADVANCE | required | zmienna5 = `, this.zmienna5());
+        console.warn(`ADVANCE | required | zmienna6 = `, this.zmienna6());
+        console.warn(`ADVANCE | descendants | contentChild DEFAULT = `, this.zmianna10a());
+        console.warn(`ADVANCE | descendants | contentChild TRUE = `, this.zmianna10b());
+        console.warn(`ADVANCE | descendants | contentChild FALSE = `, this.zmianna10c());
+        console.warn(`ADVANCE | descendants | contentChildren DEFAULT = `, this.zmianna11a());
+        console.warn(`ADVANCE | descendants | contentChildren TRUE = `, this.zmianna11b());
+        console.warn(`ADVANCE | descendants | contentChildren FALSE = `, this.zmianna11c());
       },
     });
   }
   /*
-	required - oznaczenie wymaganych (usuwa możliwość 'udefined' w sygnale )
-
-	gdy queryChild nie znajdzie to zwraca 'udefined'
-	np: schowane elementy przez '@if' 
+  QUERY 'required'
+	szukany element musi istnieć! Usuwa 'udefined'
 	*/
   zmienna1a = viewChild.required('myDOM');
-  zmienna1b = viewChild.required(CompIChildViewChild);
+  zmienna1b = viewChild.required(CompI_QueryChild);
   zmienna2a = contentChild.required('contentRef');
-  zmienna2b = contentChild.required(CompIChildContentChild);
-  // zmienna3 = viewChildren.required('');				// 'required' NIE MA
-  // zmienna4 = contentChildren.required('');			// 'required' NIE MA
+  zmienna2b = contentChild.required(CompI_QueryChild);
+  // zmienna3 = viewChildren.required('');				// 'required' NIE MA NA 'viewChildren'
+  // zmienna4 = contentChildren.required('');			// 'required' NIE MA NA 'contentChildren'
 
   /*
-	OPCJE:
-			Dygresja: myśla o elementach w View i Content jak o pudełku
+	QUERY OPCJE/KONFIGURACJA
+	read | pozwala wskazać konkretną rzecz do pobrania z elementu 
+  DOMYŚLNE
+  Jeśli celujesz w tag (np. <div>), dostaniesz ElementRef.
+  Jeśli celujesz w komponent (np. <app-user>), dostaniesz instancję klasy tego komponentu.
 
-	- read | pozwala wskazać konkretną rzecz z pudełka 
-					Jeśli celujesz w tag (np. <div>), dostaniesz ElementRef.
-					Jeśli celujesz w komponent (np. <app-user>), dostaniesz instancję klasy tego komponentu.
-								Jeśli chcesz:													Ustaw read na:
-							natywnego DOM (nativeElement)							ElementRef
-							metod i pól komponentu										(To jest domyślne, nie trzeba pisać)
-							konkretnej dyrektywy na elemencie					NazwaDyrektywy
-							dynamicznego dodawania komponentów				ViewContainerRef
-							szablonu w <ng-template>									TemplateRef
-					NIE UŻYWAĆ ZA DUŻO, lepiej przez inputy itp...
+  CO JEŚLI DANY ELEMENT MA WIĘCEJ niż domyślnie pobierana dla niego wartość? Wtedy wchodzi 'read'
+      Jeśli chcesz:													Ustaw read na:
+    natywnego DOM (nativeElement)							ElementRef
+    metod i pól komponentu										(To jest domyślne, nie trzeba pisać)
+    konkretnej dyrektywy na elemencie					NazwaDyrektywy
+    dynamicznego dodawania komponentów				ViewContainerRef
+    szablonu w <ng-template>									TemplateRef
+  UWAGA
+  NIE UŻYWAĆ ZA DUŻO, lepiej przez inputy itp...
 	*/
-  zmienna5 = viewChild(CompIChildViewChild, { read: ElementRef }); //              zwróci HOSTA
-  // zmienna5 = viewChild(CompIChildViewChild, { read: KonkretnaDyrektywa });		// zwróci DYREKTYWĘ
-  // zmienna5 = viewChild(CompIChildViewChild, { read: TemplateRef });	//         zwróci <ng-template/>
-  zmienna6 = contentChild(CompIChildContentChild, { read: ViewContainerRef }); //  wróci ContainerRef
+  zmienna5 = viewChild(CompI_QueryChild, { read: ElementRef }); //              zwróci HOSTA
+  // zmienna5 = viewChild(CompI_QueryChild, { read: KonkretnaDyrektywa });		  // zwróci DYREKTYWĘ
+  // zmienna5 = viewChild(CompI_QueryChild, { read: TemplateRef });	//          zwróci <ng-template/>
+  zmienna6 = contentChild(CompI_QueryChild, { read: ViewContainerRef }); //     wróci ContainerRef
 
   /*
-	- descendants
-			domyślnie:
-			- contentChild		| zagnieżdżone dzieci (wiele poziomów)
-			- contentChildren | bezpośrednie dzieci (1 poziom)
+	QUERY descendants -> wyjście poza ramy komponentu z poszukiwaniem
+  domyślnie:
+  - contentChild		| zagnieżdżone dzieci (wiele poziomów)
+  - contentChildren | bezpośrednie dzieci (1 poziom)
 	
 	 <app-comp-i-child-b>
       <div>															// ten <div> sprawia, że matrioszka-a nie jest bezpośrednim potomkiem ....
@@ -322,10 +389,10 @@ export class CompIChildB {
     </app-comp-i-child-b>
 
 	UWAGA: 
-		- z 'descendants: true', można się dostać do:
-				- CompIMatrioszkaA
-				- CompIMatrioszkaC -> kontent CompIMatrioszkaA	(wchodzi w KONTENT innych komponentów)
-		- dostęp do 'CompIMatrioszkaB' NIE JEST możliwy 'descendants' nie wchodzi w VIEW innych komponentów
+  - z 'descendants: true', można się dostać do:
+      - CompIMatrioszkaA
+      - CompIMatrioszkaC -> kontent CompIMatrioszkaA	(wchodzi w KONTENT innych komponentów)
+  - dostęp do 'CompIMatrioszkaB' NIE JEST możliwy 'descendants' nie wchodzi w VIEW innych komponentów
 	*/
   zmianna10a = contentChild(CompIMatrioszkaA); // domyślnie 'true'	//       ZNAJDZIE
   zmianna10b = contentChild(CompIMatrioszkaA, { descendants: true }); //     ZNAJDZIE

@@ -2,72 +2,96 @@ import { Component, ElementRef, forwardRef, inject, Renderer2 } from '@angular/c
 
 @Component({
   selector: 'app-comp-j',
-  template: `<app-comp-j-child />`,
-  imports: [forwardRef(() => CompJChild)],
-})
-export class CompJ {}
+  imports: [forwardRef(() => CompJ_ElementRef), forwardRef(() => CompJ_Renderer2)],
+  template: `
+    <!--  -->
+    <CompJ_ElementRef />
+    <br />
+    <hr />
 
-// ###############################
-// ############################### DOM API
-// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-
-@Component({
-  selector: 'app-comp-j-child',
-  template: `<div>COMP_J_CHILD</div>`,
-  styles: `
-    :host {
-      display: block;
-    }
-
-    div {
-      width: 120px;
-      height: 60px;
-    }
+    <!--  -->
+    <CompJ_Renderer2 />
+    <br />
+    <hr />
   `,
 })
-export class CompJChild {
+export class CompJ {
   /*
-	DOM API
-
-	stosujemy gdy:
-		- ręczne ustawienie 'focus'
-		- pomiar geometrii 'getBoundingClientRect'
-		- obserwujemy MutationObserver, ResizeObserver, IntersectionObserver.
-	
+	DOM API stosujemy gdy chcemy ręcznie manipulować DOM HOSTA, np:
+  - ręcznie ustawić 'focus' 
+  - pomierzyć geometrię komponentu 'getBoundingClientRect'
+  - korzystać z MutationObserver, ResizeObserver, IntersectionObserver.
 	*/
+}
+
+// ###############################
+// ############################### manipulowanie dom za pomocą DI z 'ElementRef'
+// ############################### inject(ElementRef<HTMLElement>);
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+@Component({
+  selector: 'CompJ_ElementRef',
+  imports: [],
+  template: `
+    <div>
+      <div>CompJ_ElementRef</div>
+      <br />
+    </div>
+  `,
+})
+export class CompJ_ElementRef {
+  /*
+  ElementRef -> klasa do opakowania natywnych obiektów DOM
+  możemy go wstrzyknąć w DI 'inject(ElementRef<HTMLElement>)' daje nam dostęp do OBIEKTU DOM HOSTA
+  */
   constructor() {
-    /*
-		inject(ElementRef)
-		wstrzykujemy 'ElementRef' i to daje nam dostęp do OBIEKTU DOM HOSTA!!!
-		ElementRef -> klasa do opakowania natywnych obiektów DOM
-		*/
     const elementRef = inject(ElementRef<HTMLElement>);
-    console.log('nativeElement = ', elementRef.nativeElement);
+    console.log('ElementRef | = ', elementRef);
+
+    (elementRef.nativeElement as HTMLElement).style.display = `block`;
     (elementRef.nativeElement as HTMLElement).style.border = `1px solid red`;
+  }
+}
 
-    /*
-		Renderer2 – lepsze i nowsze podejście do manipulowanie DOM 
-				Pozwala na bezpieczne operowanie w środowiskach bez klasycznego DOM-u (np. przy Server-Side Renderingu).
-				setStyle, addClass, setAttribute i listen.
+// ###############################
+// ############################### manipulowanie dom za pomocą Renderer2
+// ###############################
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+@Component({
+  selector: 'CompJ_Renderer2',
+  imports: [],
+  template: `
+    <div>
+      <div>CompJ_Renderer2</div>
+      <br />
+    </div>
+  `,
+})
+export class CompJ_Renderer2 {
+  /*
+  Renderer2 – lepsze i nowsze podejście do manipulowania DOM 
+  Pozwala na manipulację w DOM przy SSR (server-side-rendering)
+  np: setStyle, addClass, setAttribute i listen.
 
-		pośrednik (abstrakcja) między Twoim kodem a przeglądarką. 
-				Zamiast  "przeglądarko, zmień kolor tego elementu!", 
-				mówisz: "Rendererze, czy mógłbyś łaskawie ustawić ten styl?".
-		Dzięki temu Twoja aplikacja jest:
-				Bezpieczniejsza (chroni przed niektórymi atakami XSS).
-				Uniwersalna (zadziała na serwerze i w Web Workerach)
+  Renderer2 to pośrednik między kodem, a przeglądarką. 
+      Zamiast  "przeglądarko, zmień kolor tego elementu!", 
+      mówisz: "Rendererze, czy mógłbyś ustawić ten styl?".
+  Dzięki temu aplikacja jest:
+      Bezpieczniejsza (chroni przed niektórymi atakami XSS).
+      Uniwersalna (zadziała na serwerze i w Web Workerach)
 
-		Renderer2 jest super, pamiętaj o hierarchii ważności w Angularze:
-   			- Najpierw spróbuj Bindowania ([class], [style], [attr]).
-    		- Jeśli to nie wystarczy, użyj Renderer2.
-    		- Z nativeElement korzystaj tylko w sytuacjach bez wyjścia 
-					(np. pomiar wymiarów offsetWidth lub wywołanie focus()).
-     */
-    const renderer = inject(Renderer2);
-    console.log('renderer = ', renderer);
+  kolejność, w jakiej próbować manipulować elementem
+  - 1) bindowanie ([class], [style], [attr]).
+  - 2) Renderer2.
+  - 3) jeśli nic nie dziąła to 'ElementRef.nativeElement'
+    (np. pomiar wymiarów offsetWidth lub wywołanie focus()).
+  */
+  constructor() {
+    const elementRef = inject(ElementRef<HTMLElement>);
+    const renderer2 = inject(Renderer2);
+    console.log('Renderer2 | = ', renderer2);
 
-    renderer.setStyle(elementRef.nativeElement, 'background-color', 'skyblue');
-    renderer.listen('window', 'resize', (event) => {
+    renderer2.setStyle(elementRef.nativeElement, 'background-color', 'skyblue');
+    renderer2.listen('window', 'resize', (event) => {
       console.log('Zmieniono rozmiar okna!', event);
     });
   }

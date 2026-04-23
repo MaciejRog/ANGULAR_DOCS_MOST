@@ -45,8 +45,8 @@ export class TempChildA {
 				korzysta z metody toString() dla obiektów i tablic
 
 			- atrybutów tagów HTML lub inputów komponentów, poprzez znaki '[]' np:
-					<button [disabled]="isFormValid()">Save</button> 	
-					<div [attr.custom-text]="valueB"></div>
+					<button [disabled]="isFormValid()">Save</button> 			<- prperty binding
+					<div [attr.custom-text]="valueB"></div>								<- attribute binding
     			<app-temp-b-child-b [name]="valueC" />
 
 					UWAGA 
@@ -63,6 +63,9 @@ export class TempChildA {
 					traktowane tak samo jak
 					<button [disabled]="valueB">Save</button>
 
+		prperty binding vs attribute binding
+					property dba o zmianę wartości obiektu w DOM reprezentującego tag html
+					attribute ustawia faktycznie wartośc na tym atrybucie tagu 
 	*/
   // valueA = 'valueA';
   valueA = signal('valueA'); // można bindować zwykłe pola, ale lepiej 'signals'
